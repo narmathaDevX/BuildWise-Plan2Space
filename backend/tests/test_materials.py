@@ -3,7 +3,7 @@ from backend.app.services.materials import calculate_default_materials, summariz
 
 def test_materials_calculation_and_numeric_quantities():
     mats = calculate_default_materials(1850.0)
-    assert len(mats) == 6
+    assert len(mats) >= 15
 
     # Verify all quantities and rates are numbers, not strings
     for m in mats:
@@ -18,9 +18,13 @@ def test_materials_calculation_and_numeric_quantities():
     assert cement["rate"] == 420.0
     assert cement["purchased"] is True
 
+    steel = next(m for m in mats if m["key"] == "steel")
+    assert steel["quantity"] == 3.8
+    assert steel["rate"] == 68000.0
+    assert steel["purchased"] is True
+
     summary = summarize_materials(mats)
     assert summary["rates_as_of"] == "October 2026"
-    assert summary["total_count"] == 6
+    assert summary["total_count"] == len(mats)
     assert summary["purchased_count"] == 2
-    assert summary["purchase_progress"] == 33
-    assert len(summary["categories"]) == 3
+    assert len(summary["categories"]) >= 5

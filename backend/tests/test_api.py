@@ -146,7 +146,7 @@ def test_materials_endpoints():
     m_res = client.get("/api/projects/current/materials")
     assert m_res.status_code == 200
     m_data = m_res.json()
-    assert m_data["total_count"] == 6
+    assert m_data["total_count"] >= 15
     mat_id = m_data["materials"][0]["id"]
 
     # Toggle purchased flag

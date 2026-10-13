@@ -1,60 +1,176 @@
 {
   "as_of": "October 2026",
-  "source": "IS 456:2000 / CPWD Specifications & Tamil Nadu Construction Practice Thumb Rules",
+  "source": "Tamil Nadu PWD Schedule of Rates (SOR 2025-2026) & Builders Association of India (BAI) Tamil Nadu State Centre",
   "defaults": [
     {
       "key": "cement",
-      "name": "Cement",
+      "name": "Cement (UltraTech / Ramco PPC)",
       "category": "Structure",
       "unit": "bags",
       "factor_per_sqft": 0.22703,
       "rate": 420.0,
-      "default_purchased": true
+      "default_purchased": true,
+      "description": "53-Grade / Supergrade Portland Pozzolana Cement for structural RCC and slabs"
     },
     {
       "key": "steel",
-      "name": "Steel",
+      "name": "TMT Steel (Tata Tiscon / JSW Fe 550D)",
       "category": "Structure",
       "unit": "tons",
       "factor_per_sqft": 0.002054,
       "rate": 68000.0,
-      "default_purchased": true
+      "default_purchased": true,
+      "description": "High ductility Fe 550D thermo-mechanically treated reinforcement rebars"
+    },
+    {
+      "key": "blue_metal_20mm",
+      "name": "20mm Blue Metal Jelly (Aggregate)",
+      "category": "Structure",
+      "unit": "tons",
+      "factor_per_sqft": 0.032,
+      "rate": 1550.0,
+      "default_purchased": false,
+      "description": "Machine-crushed granite angular coarse aggregate for RCC beams, columns and slabs"
     },
     {
       "key": "m_sand",
-      "name": "M-Sand",
+      "name": "M-Sand (Masonry & Concreting)",
       "category": "Masonry",
       "unit": "tons",
       "factor_per_sqft": 0.017297,
-      "rate": 1800.0,
-      "default_purchased": false
+      "rate": 1850.0,
+      "default_purchased": false,
+      "description": "Manufactured sand cubical particles washed for mortar and structural concrete"
+    },
+    {
+      "key": "p_sand",
+      "name": "P-Sand (Plastering Sand double-washed)",
+      "category": "Masonry",
+      "unit": "tons",
+      "factor_per_sqft": 0.012,
+      "rate": 2250.0,
+      "default_purchased": false,
+      "description": "Micro-graded double-washed fine plastering sand ensuring crack-free wall finish"
     },
     {
       "key": "bricks",
-      "name": "Bricks",
+      "name": "Red Chamber Clay Bricks (First Class)",
       "category": "Masonry",
       "unit": "nos",
       "factor_per_sqft": 9.7297,
-      "rate": 9.0,
-      "default_purchased": false
+      "rate": 10.5,
+      "default_purchased": false,
+      "description": "Country-burnt wire-cut standard red clay bricks for external and load-bearing walls"
+    },
+    {
+      "key": "solid_blocks",
+      "name": "Solid Concrete Blocks (6-inch)",
+      "category": "Masonry",
+      "unit": "nos",
+      "factor_per_sqft": 1.25,
+      "rate": 42.0,
+      "default_purchased": false,
+      "description": "High-density vibrated concrete masonry blocks for compound and partition walls"
     },
     {
       "key": "floor_tiles",
-      "name": "Floor Tiles",
+      "name": "Floor Tiles (Kajaria / Somany Vitrified)",
       "category": "Finishing",
       "unit": "sq.ft",
       "factor_per_sqft": 0.89189,
       "rate": 85.0,
-      "default_purchased": false
+      "default_purchased": false,
+      "description": "Double charged / glazed vitrified floor tiles with Nano polish finish"
+    },
+    {
+      "key": "granite",
+      "name": "Granite Slabs (Black Galaxy / Tan Brown)",
+      "category": "Finishing",
+      "unit": "sq.ft",
+      "factor_per_sqft": 0.045,
+      "rate": 160.0,
+      "default_purchased": false,
+      "description": "18mm mirror-polished natural granite for kitchen countertop and window sills"
     },
     {
       "key": "paint",
-      "name": "Paint",
+      "name": "Paint (Asian Paints Royale / Apex)",
       "category": "Finishing",
       "unit": "litres",
       "factor_per_sqft": 0.05135,
-      "rate": 260.0,
-      "default_purchased": false
+      "rate": 280.0,
+      "default_purchased": false,
+      "description": "Interior luxury emulsion and exterior weatherproof anti-fungal silicone acrylic paint"
+    },
+    {
+      "key": "wall_putty",
+      "name": "Wall Care Putty (Birla White)",
+      "category": "Finishing",
+      "unit": "kg",
+      "factor_per_sqft": 0.35,
+      "rate": 22.0,
+      "default_purchased": false,
+      "description": "White cement-based water-resistant polymer modified wall skim coat"
+    },
+    {
+      "key": "electrical_wiring",
+      "name": "Electrical Wiring & Conduits (Polycab FRLS)",
+      "category": "Electrical & Plumbing",
+      "unit": "sq.ft",
+      "factor_per_sqft": 1.0,
+      "rate": 110.0,
+      "default_purchased": false,
+      "description": "Flame Retardant Low Smoke copper wires with ISI PVC heavy-gauge concealed pipes"
+    },
+    {
+      "key": "plumbing_cpvc",
+      "name": "Plumbing & Drainage (Ashirvad CPVC / Supreme)",
+      "category": "Electrical & Plumbing",
+      "unit": "sq.ft",
+      "factor_per_sqft": 1.0,
+      "rate": 125.0,
+      "default_purchased": false,
+      "description": "SDR-11 hot & cold potable CPVC lines and SWR drainage pipes with chamber traps"
+    },
+    {
+      "key": "sanitaryware",
+      "name": "Sanitaryware & Brassware (Parryware / Hindware)",
+      "category": "Electrical & Plumbing",
+      "unit": "sets",
+      "factor_per_sqft": 0.0016,
+      "rate": 8500.0,
+      "default_purchased": false,
+      "description": "Vitreous china wall-hung/floor EWC, wash basin with single lever chrome mixer"
+    },
+    {
+      "key": "teak_main_door",
+      "name": "Teak Wood Main Entrance Door & Frame",
+      "category": "Doors & Windows",
+      "unit": "sets",
+      "factor_per_sqft": 0.00054,
+      "rate": 32000.0,
+      "default_purchased": false,
+      "description": "First quality seasoned Burma/Nagaland teak wood ornamental carved door and frame"
+    },
+    {
+      "key": "flush_doors",
+      "name": "Flush Bedroom Doors with Wooden Frames",
+      "category": "Doors & Windows",
+      "unit": "nos",
+      "factor_per_sqft": 0.0032,
+      "rate": 5200.0,
+      "default_purchased": false,
+      "description": "Waterproof BWP solid core blockboard flush doors with SS hinges and mortise locks"
+    },
+    {
+      "key": "upvc_windows",
+      "name": "UPVC Sliding Windows with Mosquito Mesh",
+      "category": "Doors & Windows",
+      "unit": "sq.ft",
+      "factor_per_sqft": 0.12,
+      "rate": 450.0,
+      "default_purchased": false,
+      "description": "Multi-chambered galvanized steel reinforced UPVC 3-track sliding window units"
     }
   ]
 }

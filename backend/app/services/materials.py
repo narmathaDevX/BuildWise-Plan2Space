@@ -14,12 +14,18 @@ def calculate_default_materials(built_up_area: float = 1850.0) -> list[dict[str,
 
     items = []
     for d in defaults:
-        qty = round(area * float(d["factor_per_sqft"]), 1)
-        # Clean whole numbers
-        if d["unit"] in {"bags", "nos"}:
-            qty = int(round(qty))
-        elif d["unit"] in {"tons", "litres"}:
-            qty = round(qty, 1)
+        factor = float(d["factor_per_sqft"])
+        unit = d["unit"]
+        raw_qty = area * factor
+
+        if unit in {"bags", "nos", "kg", "sets"}:
+            qty = max(1, int(round(raw_qty)))
+        elif unit in {"tons", "litres"}:
+            qty = round(raw_qty, 1)
+        elif unit == "sq.ft":
+            qty = int(round(raw_qty))
+        else:
+            qty = round(raw_qty, 1)
 
         rate = float(d["rate"])
         items.append(
@@ -28,11 +34,12 @@ def calculate_default_materials(built_up_area: float = 1850.0) -> list[dict[str,
                 "name": d["name"],
                 "category": d["category"],
                 "quantity": qty,
-                "unit": d["unit"],
+                "unit": unit,
                 "rate": rate,
                 "estimated_cost": int(round(qty * rate)),
                 "purchased": bool(d.get("default_purchased", False)),
                 "is_custom": False,
+                "description": d.get("description", ""),
             }
         )
 

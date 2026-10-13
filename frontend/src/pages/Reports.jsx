@@ -53,54 +53,30 @@ function Reports() {
     );
   }
 
-  // Fallbacks if data is not available yet
-  const budget = report?.budget || 3500000;
-  const estimatedCost = report?.estimated_cost || 3250000;
-  const remaining = report?.remaining !== undefined ? report.remaining : budget - estimatedCost;
-  const metrics = report?.metrics || {
-    plot_area: 2400,
-    built_up_area: 1850,
-    overall_progress_pct: 18,
-    completed_stages: 2,
-    current_phase: "Structure",
+  if (!report?.has_project) {
+    return (
+      <main className="reports-page">
+        <section className="reports-header">
+          <div>
+            <span className="eyebrow">BUILDWISE / REPORTS</span>
+            <h1>No active project report</h1>
+            <p>Generate a house plan in the House Planner to view your consolidated cost, schedule, and procurement report.</p>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  const budget = report.budget || 0;
+  const estimatedCost = report.estimated_cost || 0;
+  const remaining = report.remaining !== undefined ? report.remaining : budget - estimatedCost;
+  const metrics = report.metrics || {};
+  const costBreakdown = report.cost_breakdown || [];
+  const materialsSummary = report.materials_summary || {
+    purchased_count: 0,
+    total_count: 0,
   };
-  const costBreakdown = report?.cost_breakdown || [
-    { name: "Structure", amount: 1120000, percentage: 34 },
-    { name: "Masonry", amount: 585000, percentage: 18 },
-    { name: "Electrical & Plumbing", amount: 487500, percentage: 15 },
-    { name: "Flooring & Finishing", amount: 682500, percentage: 21 },
-    { name: "Doors & Windows", amount: 325000, percentage: 10 },
-  ];
-  const materialsSummary = report?.materials_summary || {
-    purchased_count: 2,
-    total_count: 6,
-  };
-  const statusGrid = report?.status_grid || [
-    {
-      title: "Planning",
-      subtitle: "Requirements and house plan prepared",
-      value: "Complete",
-      status: "completed",
-    },
-    {
-      title: "Foundation",
-      subtitle: "Foundation stage completed",
-      value: "Complete",
-      status: "completed",
-    },
-    {
-      title: "Structure",
-      subtitle: "Structural work currently underway",
-      value: "75%",
-      status: "active",
-    },
-    {
-      title: "Finishing",
-      subtitle: "Yet to begin",
-      value: "Pending",
-      status: "upcoming",
-    },
-  ];
+  const statusGrid = report.status_grid || [];
 
   const budgetUsedPct = budget > 0 ? Math.round((estimatedCost / budget) * 100) : 0;
 

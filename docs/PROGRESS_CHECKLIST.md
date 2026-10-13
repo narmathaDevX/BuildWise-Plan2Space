@@ -92,3 +92,29 @@ This checklist tracks the implementation of backend, database, cost/schedule/mat
 - [x] Author comprehensive root `README.md` and `backend/README.md`.
 - [x] Record all assumptions, limitations, and honesty disclosures.
 - [x] Final deliverable verification.
+
+---
+
+## Phase 9: Realism Overhaul & Day-to-Day Site Execution Checklist (User Requested)
+- [x] **Realistic Floor Plan Engine Overhaul (`backend/app/services/floorplan/solver.py`)**:
+  - Replaced naive horizontal slices with an architecturally grounded 4-band/3-band residential solver.
+  - Enforced realistic residential proportions: Kitchen (~110–135 sq ft, not 310 sq ft), Bathrooms (~45–50 sq ft, not 113 sq ft), Utility (~45–55 sq ft, not 280 sq ft), Car Porch (~170 sq ft at front road side), Living Hall (~364 sq ft), Master Bed & Bed 2 (~256 sq ft each at rear quiet corners with attached bath).
+- [x] **"Generate Another Option" & Layout Switcher Fix (`frontend/src/pages/GeneratedPlan.jsx`)**:
+  - Automatically switched `selectedIndex` to the newly appended plan.
+  - Added an interactive layout pill bar (`Layout A (Recommended)`, `Layout B`, `Layout C`...) above the floor plan so users can instantly switch between alternatives.
+  - Persisted the complete merged plan collection to the backend database.
+- [x] **Comprehensive Tamil Nadu Construction Materials Dataset (`backend/app/data/materials.json`, `materials.py`, `Materials.jsx`)**:
+  - Expanded catalog to 17 realistic items spanning all 5 Tamil Nadu categories: `Structure`, `Masonry`, `Finishing`, `Electrical & Plumbing`, `Doors & Windows`.
+  - Ground rates sourced from Tamil Nadu PWD Schedule of Rates (SOR 2025-2026) and Builders Association of India (BAI) retail rates (UltraTech/Ramco Cement @ ₹420/bag, TMT Fe 550D @ ₹68,000/ton, M-Sand @ ₹1,850/ton, P-Sand @ ₹2,250/ton, 20mm Blue Metal Jelly @ ₹1,550/ton, Bricks @ ₹10.50/nos, Vitrified Tiles @ ₹85/sq ft, Granite @ ₹160/sq ft, Asian Paints @ ₹280/L, Polycab wiring @ ₹110/sq ft, Ashirvad CPVC plumbing @ ₹125/sq ft, Teak door @ ₹32,000/set, UPVC windows @ ₹450/sq ft).
+  - Added interactive category filter pills (`All Materials`, `Structure`, `Masonry`, `Finishing`, `Electrical & Plumbing`, `Doors & Windows`) on the Materials page.
+- [x] **Day-to-Day Site Work Checklist (`backend/app/db/models.py`, `routers/tasks.py`, `Construction.jsx`)**:
+  - Implemented `ConstructionTask` model with day numbers, stages, trades, critical path flags, and postponement tracking.
+  - Seeded 42 realistic day-to-day Tamil Nadu site execution tasks covering all 7 stages (Site Prep, Foundation, Structure, Walls, Electrical, Plumbing, Finishing).
+  - Built interactive checklist UI in `Construction.jsx` with day navigation (`< Day X of 40 >`), manual completion checkboxes, and "Postpone to next day (+1 Day)" button.
+  - Persisted all status updates and postponements in SQLite database.
+- [x] **Zero Hardcoded Data Audit**:
+  - Verified Dashboard, House Planner, GeneratedPlan, Construction, Materials, and Reports all consume dynamic backend APIs with graceful empty/loading states.
+- [x] **Testing & Verification**:
+  - All 23 Pytest backend tests passing (`pytest backend/tests/`).
+  - Frontend production build passing (`npm run build`).
+  - Captured updated verification screenshots in `docs/screenshots/after/`.

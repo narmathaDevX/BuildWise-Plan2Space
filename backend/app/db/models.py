@@ -58,6 +58,7 @@ class Project(Base):
     plans = relationship("PlanModel", back_populates="project", cascade="all, delete-orphan")
     estimates = relationship("Estimate", back_populates="project", cascade="all, delete-orphan")
     materials = relationship("Material", back_populates="project", cascade="all, delete-orphan")
+    tasks = relationship("ConstructionTask", back_populates="project", cascade="all, delete-orphan")
 
     def get_form(self) -> dict[str, Any]:
         if not self.form_json:
@@ -149,3 +150,23 @@ class Material(Base):
     created_at = Column(DateTime(timezone=True), default=utc_now)
 
     project = relationship("Project", back_populates="materials")
+
+
+class ConstructionTask(Base):
+    __tablename__ = "construction_tasks"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    project_id = Column(String(36), ForeignKey("projects.id", ondelete="CASCADE"), index=True, nullable=False)
+    stage_key = Column(String(64), nullable=False)
+    day_number = Column(Integer, nullable=False, default=1)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    trade = Column(String(128), default="General Masonry")
+    completed = Column(Boolean, default=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    postponed_count = Column(Integer, default=0)
+    is_critical = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now)
+
+    project = relationship("Project", back_populates="tasks")
+

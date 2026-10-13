@@ -15,6 +15,7 @@ from backend.app.routers.materials import router as materials_router
 from backend.app.routers.ml import router as ml_router
 from backend.app.routers.plans import router as plans_router
 from backend.app.routers.projects import router as projects_router
+from backend.app.routers.tasks import router as tasks_router
 
 
 @asynccontextmanager
@@ -67,6 +68,7 @@ app.include_router(auth_router)
 app.include_router(plans_router)
 app.include_router(estimates_router)
 app.include_router(projects_router)
+app.include_router(tasks_router)
 app.include_router(materials_router)
 app.include_router(ml_router)
 

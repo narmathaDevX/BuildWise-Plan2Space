@@ -180,6 +180,33 @@ export async function deleteCustomMaterial(id) {
   });
 }
 
+export async function getProjectTasks(day = null) {
+  const url = day !== null && day !== undefined
+    ? `/api/projects/current/tasks?day=${day}`
+    : "/api/projects/current/tasks";
+  return request(url);
+}
+
+export async function updateProjectTask(id, patch) {
+  return request(`/api/projects/current/tasks/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+}
+
+export async function postponeProjectTask(id) {
+  return request(`/api/projects/current/tasks/${id}/postpone`, {
+    method: "POST",
+  });
+}
+
+export async function createProjectTask(task) {
+  return request("/api/projects/current/tasks", {
+    method: "POST",
+    body: JSON.stringify(task),
+  });
+}
+
 export async function loginUser(email, password) {
   const data = await request("/api/auth/login", {
     method: "POST",

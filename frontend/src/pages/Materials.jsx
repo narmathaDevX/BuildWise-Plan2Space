@@ -12,6 +12,9 @@ import {
   Wrench,
   Paintbrush,
   Plus,
+  Zap,
+  Home,
+  Check,
 } from "lucide-react";
 import {
   getProjectMaterials,
@@ -27,22 +30,26 @@ function getCategoryIcon(name) {
   if (name === "Structure") return Layers3;
   if (name === "Masonry") return Boxes;
   if (name === "Finishing") return Paintbrush;
+  if (name === "Electrical & Plumbing") return Zap;
+  if (name === "Doors & Windows") return Home;
   return Package;
 }
 
 function getMaterialIcon(name, category) {
-  if (name === "Cement") return Layers3;
-  if (name === "Steel") return Wrench;
-  if (name === "M-Sand") return Boxes;
-  if (name === "Bricks") return Package;
-  if (name === "Floor Tiles") return Layers3;
-  if (name === "Paint") return Paintbrush;
+  if (name.includes("Cement") || name.includes("Concrete") || name.includes("Aggregate")) return Layers3;
+  if (name.includes("Steel") || name.includes("Rebar")) return Wrench;
+  if (name.includes("Sand") || name.includes("Brick") || name.includes("Block")) return Boxes;
+  if (name.includes("Tile") || name.includes("Granite")) return Layers3;
+  if (name.includes("Paint") || name.includes("Putty")) return Paintbrush;
+  if (name.includes("Wiring") || name.includes("Electrical") || name.includes("Plumbing")) return Zap;
+  if (name.includes("Door") || name.includes("Window")) return Home;
   return getCategoryIcon(category);
 }
 
 function Materials() {
   const [materials, setMaterials] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [ratesAsOf, setRatesAsOf] = useState("October 2026");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -171,10 +178,15 @@ function Materials() {
   const activeCategories =
     categories.length > 0
       ? categories
-      : ["Structure", "Masonry", "Finishing"].map((catName) => ({
+      : ["Structure", "Masonry", "Finishing", "Electrical & Plumbing", "Doors & Windows"].map((catName) => ({
           name: catName,
           count: materials.filter((m) => m.category === catName).length,
         }));
+
+  const displayedMaterials =
+    selectedCategory === "All"
+      ? materials
+      : materials.filter((m) => m.category === selectedCategory);
 
   return (
     <main className="materials-page">
@@ -284,6 +296,8 @@ function Materials() {
                   <option value="Structure">Structure</option>
                   <option value="Masonry">Masonry</option>
                   <option value="Finishing">Finishing</option>
+                  <option value="Electrical & Plumbing">Electrical & Plumbing</option>
+                  <option value="Doors & Windows">Doors & Windows</option>
                 </select>
               </div>
 
@@ -473,10 +487,32 @@ function Materials() {
         </div>
 
         <div className="material-categories">
+          <div
+            className={`material-category ${selectedCategory === "All" ? "is-active" : ""}`}
+            key="All"
+            onClick={() => setSelectedCategory("All")}
+            style={{ cursor: "pointer", border: selectedCategory === "All" ? "2px solid var(--accent)" : undefined }}
+          >
+            <div className="category-icon">
+              <Package size={19} />
+            </div>
+            <div>
+              <strong>All Materials</strong>
+              <span>{materials.length} items</span>
+            </div>
+            {selectedCategory === "All" ? <Check size={16} /> : <ChevronRight size={16} />}
+          </div>
+
           {activeCategories.map((category) => {
             const CategoryIcon = getCategoryIcon(category.name);
+            const isSelected = selectedCategory === category.name;
             return (
-              <div className="material-category" key={category.name}>
+              <div
+                className={`material-category ${isSelected ? "is-active" : ""}`}
+                key={category.name}
+                onClick={() => setSelectedCategory(isSelected ? "All" : category.name)}
+                style={{ cursor: "pointer", border: isSelected ? "2px solid var(--accent)" : undefined }}
+              >
                 <div className="category-icon">
                   <CategoryIcon size={19} />
                 </div>
@@ -484,7 +520,7 @@ function Materials() {
                   <strong>{category.name}</strong>
                   <span>{category.count} materials</span>
                 </div>
-                <ChevronRight size={16} />
+                {isSelected ? <Check size={16} /> : <ChevronRight size={16} />}
               </div>
             );
           })}
@@ -496,9 +532,9 @@ function Materials() {
         <div className="materials-section-heading">
           <div>
             <span className="small-label">MATERIAL SCHEDULE</span>
-            <h2>Required materials</h2>
+            <h2>Required materials {selectedCategory !== "All" ? `— ${selectedCategory}` : ""}</h2>
           </div>
-          <span className="material-count">{materials.length} items</span>
+          <span className="material-count">{displayedMaterials.length} of {materials.length} items</span>
         </div>
 
         <div className="materials-table">
@@ -514,12 +550,12 @@ function Materials() {
             <div style={{ padding: "30px", textAlign: "center", color: "var(--text-soft)" }}>
               Loading materials schedule...
             </div>
-          ) : materials.length === 0 ? (
+          ) : displayedMaterials.length === 0 ? (
             <div style={{ padding: "40px", textAlign: "center", color: "var(--text-soft)" }}>
-              No materials scheduled. Generate a house plan to compute materials.
+              No materials found in this category.
             </div>
           ) : (
-            materials.map((material) => {
+            displayedMaterials.map((material) => {
               const MaterialIcon = getMaterialIcon(material.name, material.category);
               const numericQuantity = Number(material.quantity) || 0;
               const numericRate = Number(material.rate) || 0;

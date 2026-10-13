@@ -2,10 +2,11 @@ import json
 from datetime import date
 from sqlalchemy.orm import Session
 
-from backend.app.db.models import Estimate, Material, PlanModel, Project, User
+from backend.app.db.models import ConstructionTask, Estimate, Material, PlanModel, Project, User
 from backend.app.db.session import Base, SessionLocal, engine
 from backend.app.services.auth import hash_password
 from backend.app.services.cost import calculate_cost
+from backend.app.services.daily_tasks import generate_default_daily_tasks
 from backend.app.services.floorplan.solver import FloorPlanSolver
 from backend.app.services.materials import calculate_default_materials
 from backend.app.services.schedule import simulate_schedule
@@ -152,7 +153,66 @@ def init_db(db: Session | None = None) -> None:
                 )
                 db.add(db_mat)
 
+            # Persist default daily site tasks
+            tasks_list = generate_default_daily_tasks()
+            for t in tasks_list:
+                db_task = ConstructionTask(
+                    project_id=project.id,
+                    stage_key=t["stage_key"],
+                    day_number=t["day_number"],
+                    title=t["title"],
+                    description=t.get("description", ""),
+                    trade=t.get("trade", "General Masonry"),
+                    completed=t.get("completed", False),
+                    is_critical=t.get("is_critical", False),
+                    postponed_count=0,
+                )
+                db.add(db_task)
+
             db.commit()
+        else:
+            # Upgrade existing project materials if fewer than 15 items exist
+            existing_mat_count = db.query(Material).filter(Material.project_id == project.id).count()
+            if existing_mat_count < 15:
+                # Keep purchased flags of existing items
+                existing_purchased = {m.key: m.purchased for m in db.query(Material).filter(Material.project_id == project.id).all()}
+                db.query(Material).filter(Material.project_id == project.id, Material.is_custom == False).delete()  # noqa: E712
+                mat_defaults = calculate_default_materials(1850.0)
+                for m in mat_defaults:
+                    db.add(
+                        Material(
+                            project_id=project.id,
+                            key=m["key"],
+                            name=m["name"],
+                            category=m["category"],
+                            quantity=m["quantity"],
+                            unit=m["unit"],
+                            rate=m["rate"],
+                            purchased=existing_purchased.get(m["key"], m["purchased"]),
+                            is_custom=False,
+                        )
+                    )
+                db.commit()
+
+            # Seed tasks if none exist
+            existing_task_count = db.query(ConstructionTask).filter(ConstructionTask.project_id == project.id).count()
+            if existing_task_count == 0:
+                tasks_list = generate_default_daily_tasks()
+                for t in tasks_list:
+                    db.add(
+                        ConstructionTask(
+                            project_id=project.id,
+                            stage_key=t["stage_key"],
+                            day_number=t["day_number"],
+                            title=t["title"],
+                            description=t.get("description", ""),
+                            trade=t.get("trade", "General Masonry"),
+                            completed=t.get("completed", False),
+                            is_critical=t.get("is_critical", False),
+                            postponed_count=0,
+                        )
+                    )
+                db.commit()
 
     finally:
         if owns_session:

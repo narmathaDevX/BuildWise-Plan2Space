@@ -359,28 +359,35 @@ export default function GeneratedPlan({ form, onBack }) {
         throw new Error(conflicts || "The model did not return a feasible plan.");
       }
 
-      if (incoming.length > 0) {
+      setPlans((previous) => {
+        let updated;
+        let nextSelected;
+        if (!append) {
+          updated = incoming;
+          nextSelected = 0;
+        } else {
+          updated = [...previous];
+          let firstNewIdx = -1;
+          incoming.forEach((plan, index) => {
+            const id = planId(plan, index);
+            if (!updated.some((item, itemIndex) => planId(item, itemIndex) === id)) {
+              if (firstNewIdx === -1) firstNewIdx = updated.length;
+              updated.push(plan);
+            }
+          });
+          nextSelected = firstNewIdx !== -1 ? firstNewIdx : (updated.length - 1);
+        }
+        setSelectedIndex(nextSelected);
+
         saveCurrentProject({
           form: data,
-          plans: incoming,
-          selected_plan_id: planId(incoming[0], 0),
+          plans: updated,
+          selected_plan_id: planId(updated[nextSelected], nextSelected),
         }).catch(() => {});
-      }
 
-      setPlans((previous) => {
-        if (!append) return incoming;
-
-        const merged = [...previous];
-        incoming.forEach((plan, index) => {
-          const id = planId(plan, index);
-          if (!merged.some((item, itemIndex) => planId(item, itemIndex) === id)) {
-            merged.push(plan);
-          }
-        });
-        return merged;
+        return updated;
       });
 
-      if (!append) setSelectedIndex(0);
       setSeed(nextSeed);
     } catch (requestError) {
       setError(requestError?.message || "Unable to generate the floor plan.");
@@ -565,6 +572,34 @@ export default function GeneratedPlan({ form, onBack }) {
             ))}
           </div>
         </section>
+      )}
+
+      {plans.length > 1 && !compareMode && (
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center", marginBottom: "20px", padding: "12px 18px", background: "var(--card-bg, #ffffff)", borderRadius: "12px", border: "1px solid var(--border-color, #e2e8f0)", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+          <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-muted, #64748b)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Select Layout:</span>
+          {plans.map((p, idx) => {
+            const isSel = idx === selectedIndex;
+            return (
+              <button
+                key={planId(p, idx)}
+                type="button"
+                className={isSel ? "primary-button" : "secondary-button"}
+                style={{ padding: "6px 14px", fontSize: "0.85rem", borderRadius: "20px", cursor: "pointer" }}
+                onClick={() => setSelectedIndex(idx)}
+              >
+                {isSel ? "✓ " : ""}{planTitle(p, idx)}
+              </button>
+            );
+          })}
+          <button
+            className="secondary-button"
+            style={{ padding: "6px 14px", fontSize: "0.85rem", borderRadius: "20px", marginLeft: "auto", cursor: "pointer" }}
+            onClick={() => requestPlans(seed + 1, true)}
+            disabled={generating}
+          >
+            <RefreshCw size={13} className={generating ? "spin" : ""} /> + Generate another
+          </button>
+        </div>
       )}
 
       {selectedPlan && (
