@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   HardHat,
   CheckCircle2,
@@ -11,73 +12,81 @@ import {
   Paintbrush,
   Home,
   ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import { getProjectConstruction } from "../services/api";
+
+const STAGE_ICONS = {
+  site_prep: Hammer,
+  foundation: HardHat,
+  structure: Home,
+  walls: Home,
+  electrical: Zap,
+  plumbing: Droplets,
+  finishing: Paintbrush,
+};
 
 function Construction() {
-  const stages = [
-    {
-      name: "Site Preparation",
-      description: "Land clearing, marking and excavation",
-      progress: 100,
-      status: "completed",
-      icon: Hammer,
-    },
-    {
-      name: "Foundation",
-      description: "Footing, foundation and ground beam",
-      progress: 100,
-      status: "completed",
-      icon: HardHat,
-    },
-    {
-      name: "Structure",
-      description: "Columns, beams and slab construction",
-      progress: 75,
-      status: "active",
-      icon: Home,
-    },
-    {
-      name: "Walls & Partitions",
-      description: "Brickwork and internal partitions",
-      progress: 35,
-      status: "upcoming",
-      icon: Home,
-    },
-    {
-      name: "Electrical",
-      description: "Wiring, switches and electrical points",
-      progress: 10,
-      status: "upcoming",
-      icon: Zap,
-    },
-    {
-      name: "Plumbing",
-      description: "Water supply and drainage systems",
-      progress: 10,
-      status: "upcoming",
-      icon: Droplets,
-    },
-    {
-      name: "Flooring & Finishing",
-      description: "Flooring, painting and final finishes",
-      progress: 0,
-      status: "upcoming",
-      icon: Paintbrush,
-    },
-  ];
+  const [month, setMonth] = useState(1);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const completedStages = stages.filter(
-    (stage) => stage.progress === 100
-  ).length;
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    getProjectConstruction(month)
+      .then((res) => {
+        if (active) setData(res);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false);
+      });
 
-  const overallProgress = Math.round(
-    stages.reduce((sum, stage) => sum + stage.progress, 0) /
-      stages.length
-  );
+    return () => {
+      active = false;
+    };
+  }, [month]);
 
-  const currentStage =
-    stages.find((stage) => stage.status === "active") ||
-    stages[stages.length - 1];
+  if (loading && !data) {
+    return (
+      <main className="construction-page">
+        <section className="construction-header">
+          <div>
+            <span className="eyebrow">BUILDWISE / CONSTRUCTION</span>
+            <h1>Track your build.</h1>
+            <p>Loading construction schedule and projection...</p>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (!data?.has_project) {
+    return (
+      <main className="construction-page">
+        <section className="construction-header">
+          <div>
+            <span className="eyebrow">BUILDWISE / CONSTRUCTION</span>
+            <h1>No active construction project</h1>
+            <p>Plan a home first in the House Planner to generate your projected construction timeline.</p>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  const stages = (data.stages || []).map((stg) => ({
+    ...stg,
+    icon: STAGE_ICONS[stg.key] || HardHat,
+  }));
+
+  const completedStages = data.completed_stages || 0;
+  const overallProgress = data.overall_progress || 0;
+  const currentStage = stages.find((s) => s.status === "active") || (stages.length ? stages[0] : null);
+  const totalMonths = data.total_months || 11;
+  const insights = data.insights || [];
 
   return (
     <main className="construction-page">
@@ -103,17 +112,42 @@ function Construction() {
           </p>
         </div>
 
-        <div className="construction-status">
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px" }}>
+          <div className="construction-status">
+            <div className="status-icon">
+              <HardHat size={22} />
+            </div>
 
-          <div className="status-icon">
-            <HardHat size={22} />
+            <div>
+              <span>PROJECT STATUS</span>
+              <strong>{data.status_text || "Planning projected progress"}</strong>
+            </div>
           </div>
 
-          <div>
-            <span>PROJECT STATUS</span>
-            <strong>Under construction</strong>
+          {/* Month Stepper */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--bg-card, rgba(255,255,255,0.05))", padding: "4px 8px", borderRadius: "8px", border: "1px solid var(--border-color, rgba(255,255,255,0.1))" }}>
+            <button
+              className="icon-button"
+              aria-label="Previous month"
+              onClick={() => setMonth((m) => Math.max(1, m - 1))}
+              disabled={month <= 1}
+              style={{ padding: "4px", background: "none", border: "none", cursor: month <= 1 ? "not-allowed" : "pointer", opacity: month <= 1 ? 0.4 : 1 }}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+              Month {data.month || month} of {totalMonths}
+            </span>
+            <button
+              className="icon-button"
+              aria-label="Next month"
+              onClick={() => setMonth((m) => Math.min(totalMonths, m + 1))}
+              disabled={month >= totalMonths}
+              style={{ padding: "4px", background: "none", border: "none", cursor: month >= totalMonths ? "not-allowed" : "pointer", opacity: month >= totalMonths ? 0.4 : 1 }}
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
-
         </div>
 
       </section>
@@ -189,11 +223,11 @@ function Construction() {
           <span>ESTIMATED COMPLETION</span>
 
           <strong>
-            March 2027
+            {data.estimated_completion || "March 2027"}
           </strong>
 
           <small>
-            Approximately 6 months remaining
+            Approximately {data.months_remaining ?? 6} months remaining
           </small>
 
         </div>
@@ -208,11 +242,11 @@ function Construction() {
           <span>CURRENT PHASE</span>
 
           <strong>
-            Structure
+            {currentStage?.name || "Structure"}
           </strong>
 
           <small>
-            Target completion: 75%
+            {data.current_phase_target || `Target completion: ${currentStage?.progress || 75}%`}
           </small>
 
         </div>
@@ -224,45 +258,47 @@ function Construction() {
           CURRENT STAGE
       ====================================================== */}
 
-      <section className="current-stage-card">
+      {currentStage && (
+        <section className="current-stage-card">
 
-        <div className="current-stage-icon">
-          <currentStage.icon size={24} />
-        </div>
-
-        <div className="current-stage-content">
-
-          <span className="eyebrow">
-            CURRENTLY IN PROGRESS
-          </span>
-
-          <h2>
-            {currentStage.name}
-          </h2>
-
-          <p>
-            {currentStage.description}
-          </p>
-
-        </div>
-
-        <div className="current-stage-progress">
-
-          <strong>
-            {currentStage.progress}%
-          </strong>
-
-          <div className="stage-progress-bar">
-            <div
-              style={{
-                width: `${currentStage.progress}%`,
-              }}
-            />
+          <div className="current-stage-icon">
+            <currentStage.icon size={24} />
           </div>
 
-        </div>
+          <div className="current-stage-content">
 
-      </section>
+            <span className="eyebrow">
+              CURRENTLY IN PROGRESS
+            </span>
+
+            <h2>
+              {currentStage.name}
+            </h2>
+
+            <p>
+              {currentStage.description}
+            </p>
+
+          </div>
+
+          <div className="current-stage-progress">
+
+            <strong>
+              {currentStage.progress}%
+            </strong>
+
+            <div className="stage-progress-bar">
+              <div
+                style={{
+                  width: `${currentStage.progress}%`,
+                }}
+              />
+            </div>
+
+          </div>
+
+        </section>
+      )}
 
 
       {/* ======================================================
@@ -349,26 +385,24 @@ function Construction() {
                   </div>
 
 
-                  <p>
+                  <p className="stage-description">
                     {stage.description}
                   </p>
 
 
-                  <div className="stage-bottom">
+                  <div className="stage-footer">
 
-                    <div className="stage-progress-bar">
-
+                    <div className="stage-bar">
                       <div
                         style={{
                           width: `${stage.progress}%`,
                         }}
                       />
-
                     </div>
 
-                    <strong>
+                    <span>
                       {stage.progress}%
-                    </strong>
+                    </span>
 
                   </div>
 
@@ -384,16 +418,16 @@ function Construction() {
 
 
       {/* ======================================================
-          PROJECT INSIGHTS
+          INSIGHTS
       ====================================================== */}
 
-      <section className="construction-insights">
+      <section className="construction-section">
 
         <div className="section-heading">
 
           <div>
             <span className="eyebrow">
-              PROJECT INSIGHTS
+              CONSTRUCTION INSIGHTS
             </span>
 
             <h2>
@@ -406,82 +440,31 @@ function Construction() {
 
         <div className="insight-grid">
 
-          <div className="insight-card">
+          {insights.map((ins, i) => (
+            <div className="insight-card" key={i}>
 
-            <div className="insight-icon">
-              <TrendingUp size={19} />
+              <div className="insight-icon">
+                {i === 0 ? <TrendingUp size={19} /> : i === 1 ? <Zap size={19} /> : <Droplets size={19} />}
+              </div>
+
+              <div>
+                <span>
+                  {ins.label}
+                </span>
+
+                <strong>
+                  {ins.title}
+                </strong>
+
+                <p>
+                  {ins.text}
+                </p>
+              </div>
+
+              <ArrowUpRight size={17} />
+
             </div>
-
-            <div>
-              <span>
-                NEXT MILESTONE
-              </span>
-
-              <strong>
-                Complete structure
-              </strong>
-
-              <p>
-                Finish the remaining 25% of the structural
-                work before moving into wall construction.
-              </p>
-            </div>
-
-            <ArrowUpRight size={17} />
-
-          </div>
-
-
-          <div className="insight-card">
-
-            <div className="insight-icon">
-              <Zap size={19} />
-            </div>
-
-            <div>
-              <span>
-                UPCOMING
-              </span>
-
-              <strong>
-                Electrical planning
-              </strong>
-
-              <p>
-                Electrical points and wiring locations should
-                be finalized before wall finishing begins.
-              </p>
-            </div>
-
-            <ArrowUpRight size={17} />
-
-          </div>
-
-
-          <div className="insight-card">
-
-            <div className="insight-icon">
-              <Droplets size={19} />
-            </div>
-
-            <div>
-              <span>
-                UPCOMING
-              </span>
-
-              <strong>
-                Plumbing work
-              </strong>
-
-              <p>
-                Coordinate water supply and drainage routes
-                with the bathroom and kitchen layout.
-              </p>
-            </div>
-
-            <ArrowUpRight size={17} />
-
-          </div>
+          ))}
 
         </div>
 

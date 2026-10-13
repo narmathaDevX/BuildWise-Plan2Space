@@ -1,0 +1,84 @@
+{
+  "as_of": "October 2026",
+  "stages": [
+    {
+      "key": "site_prep",
+      "name": "Site Preparation",
+      "description": "Land clearing, marking and excavation",
+      "category_source": "structure",
+      "category_fraction": 0.10,
+      "min_duration_months": 1,
+      "predecessors": [],
+      "min_predecessor_progress": 0,
+      "weather_sensitive": true
+    },
+    {
+      "key": "foundation",
+      "name": "Foundation",
+      "description": "Footing, foundation and ground beam",
+      "category_source": "structure",
+      "category_fraction": 0.35,
+      "min_duration_months": 2,
+      "predecessors": ["site_prep"],
+      "min_predecessor_progress": 100,
+      "weather_sensitive": true
+    },
+    {
+      "key": "structure",
+      "name": "Structure",
+      "description": "Columns, beams and slab construction",
+      "category_source": "structure",
+      "category_fraction": 0.55,
+      "min_duration_months": 3,
+      "predecessors": ["foundation"],
+      "min_predecessor_progress": 100,
+      "weather_sensitive": true
+    },
+    {
+      "key": "walls",
+      "name": "Walls & Partitions",
+      "description": "Brickwork and internal partitions",
+      "category_source": "masonry",
+      "category_fraction": 1.00,
+      "min_duration_months": 2,
+      "predecessors": ["structure"],
+      "min_predecessor_progress": 70,
+      "weather_sensitive": false
+    },
+    {
+      "key": "electrical",
+      "name": "Electrical",
+      "description": "Wiring, switches and electrical points",
+      "category_source": "electrical_plumbing",
+      "category_fraction": 0.50,
+      "min_duration_months": 2,
+      "predecessors": ["walls"],
+      "min_predecessor_progress": 50,
+      "weather_sensitive": false
+    },
+    {
+      "key": "plumbing",
+      "name": "Plumbing",
+      "description": "Water supply and drainage systems",
+      "category_source": "electrical_plumbing",
+      "category_fraction": 0.50,
+      "min_duration_months": 2,
+      "predecessors": ["walls"],
+      "min_predecessor_progress": 50,
+      "weather_sensitive": false
+    },
+    {
+      "key": "finishing",
+      "name": "Flooring & Finishing",
+      "description": "Flooring, painting and final finishes",
+      "category_source": "finishing_and_openings",
+      "category_fraction": 1.00,
+      "min_duration_months": 3,
+      "predecessors": ["electrical", "plumbing"],
+      "min_predecessor_progress": 80,
+      "weather_sensitive": false
+    }
+  ],
+  "monsoon_months": [10, 11, 12],
+  "monsoon_slowdown_factor": 0.25
+}

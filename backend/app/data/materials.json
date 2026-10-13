@@ -1,0 +1,60 @@
+{
+  "as_of": "October 2026",
+  "source": "IS 456:2000 / CPWD Specifications & Tamil Nadu Construction Practice Thumb Rules",
+  "defaults": [
+    {
+      "key": "cement",
+      "name": "Cement",
+      "category": "Structure",
+      "unit": "bags",
+      "factor_per_sqft": 0.22703,
+      "rate": 420.0,
+      "default_purchased": true
+    },
+    {
+      "key": "steel",
+      "name": "Steel",
+      "category": "Structure",
+      "unit": "tons",
+      "factor_per_sqft": 0.002054,
+      "rate": 68000.0,
+      "default_purchased": true
+    },
+    {
+      "key": "m_sand",
+      "name": "M-Sand",
+      "category": "Masonry",
+      "unit": "tons",
+      "factor_per_sqft": 0.017297,
+      "rate": 1800.0,
+      "default_purchased": false
+    },
+    {
+      "key": "bricks",
+      "name": "Bricks",
+      "category": "Masonry",
+      "unit": "nos",
+      "factor_per_sqft": 9.7297,
+      "rate": 9.0,
+      "default_purchased": false
+    },
+    {
+      "key": "floor_tiles",
+      "name": "Floor Tiles",
+      "category": "Finishing",
+      "unit": "sq.ft",
+      "factor_per_sqft": 0.89189,
+      "rate": 85.0,
+      "default_purchased": false
+    },
+    {
+      "key": "paint",
+      "name": "Paint",
+      "category": "Finishing",
+      "unit": "litres",
+      "factor_per_sqft": 0.05135,
+      "rate": 260.0,
+      "default_purchased": false
+    }
+  ]
+}

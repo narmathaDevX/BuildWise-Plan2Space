@@ -18,6 +18,12 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { generateHousePlans } from "../services/planApi";
+import {
+  estimateCost,
+  estimateSchedule,
+  saveCurrentProject,
+  selectProjectPlan,
+} from "../services/api";
 
 const DEFAULT_FORM = {
   width: 40,
@@ -331,6 +337,9 @@ export default function GeneratedPlan({ form, onBack }) {
   const [compareMode, setCompareMode] = useState(false);
   const [error, setError] = useState("");
   const [seed, setSeed] = useState(42);
+  const [backendCost, setBackendCost] = useState(null);
+  const [backendMonths, setBackendMonths] = useState(null);
+  const [backendAssumptions, setBackendAssumptions] = useState([]);
 
   const requestPlans = useCallback(async (nextSeed, append = false) => {
     if (append) setGenerating(true);
@@ -348,6 +357,14 @@ export default function GeneratedPlan({ form, onBack }) {
           .filter(Boolean)
           .join(" ");
         throw new Error(conflicts || "The model did not return a feasible plan.");
+      }
+
+      if (incoming.length > 0) {
+        saveCurrentProject({
+          form: data,
+          plans: incoming,
+          selected_plan_id: planId(incoming[0], 0),
+        }).catch(() => {});
       }
 
       setPlans((previous) => {
@@ -385,14 +402,63 @@ export default function GeneratedPlan({ form, onBack }) {
   const plotArea = dimensions.width * dimensions.depth;
 
   const builtUpArea = num(first(
-    selectedPlan?.details?.ground_built_up,
+    selectedPlan?.details?.total_built_up,
     selectedPlan?.details?.built_up_area,
-    selectedPlan?.built_up_area
+    selectedPlan?.built_up_area,
+    selectedPlan?.details?.ground_built_up
   ), 0);
 
+  useEffect(() => {
+    if (!selectedPlan) return;
+    let active = true;
+    const curId = planId(selectedPlan, selectedIndex);
+    selectProjectPlan(curId).catch(() => {});
+
+    const totalBuiltUp = num(first(
+      selectedPlan?.details?.total_built_up,
+      selectedPlan?.details?.built_up_area,
+      selectedPlan?.built_up_area,
+      selectedPlan?.details?.ground_built_up
+    ), 0);
+
+    if (totalBuiltUp > 0) {
+      estimateCost({
+        plan_id: curId,
+        total_built_up_area: totalBuiltUp,
+        plot_area: dimensions.width * dimensions.depth,
+        floors: data.floors,
+        location: data.location,
+        quality: data.quality,
+        budget: data.budget,
+      })
+        .then((costRes) => {
+          if (!active || !costRes) return null;
+          setBackendCost(costRes.total_cost);
+          setBackendAssumptions(costRes.assumptions || []);
+          return estimateSchedule({
+            total_cost: costRes.total_cost,
+            monthly_budget: data.monthlyBudget,
+            breakdown: costRes.breakdown,
+            quality: data.quality,
+            floors: data.floors,
+            built_up_area: totalBuiltUp,
+          });
+        })
+        .then((schedRes) => {
+          if (!active || !schedRes) return;
+          setBackendMonths(schedRes.estimated_months);
+        })
+        .catch(() => {});
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [selectedIndex, selectedPlan?.plan_id, JSON.stringify(data)]);
+
   const rate = data.quality === "Economy" ? 1800 : data.quality === "Premium" ? 2800 : 2200;
-  const cost = builtUpArea > 0 ? builtUpArea * rate : 0;
-  const months = builtUpArea > 0 ? Math.max(3, Math.round(builtUpArea / 190)) : 0;
+  const cost = backendCost !== null ? backendCost : (builtUpArea > 0 ? builtUpArea * rate : 0);
+  const months = backendMonths !== null ? backendMonths : (builtUpArea > 0 ? Math.max(3, Math.round(builtUpArea / 190)) : 0);
 
   if (loading) {
     return (
@@ -567,7 +633,15 @@ export default function GeneratedPlan({ form, onBack }) {
                 <>
                   <div className="estimate-row"><IndianRupee size={19} /><div><span>Indicative construction cost</span><strong>₹{(cost / 100000).toFixed(1)} lakh</strong></div></div>
                   <div className="estimate-row"><Clock3 size={19} /><div><span>Indicative construction time</span><strong>{months}–{months + 2} months</strong></div></div>
-                  <p className="estimate-disclaimer">Preliminary estimate only. Actual costs depend on location, materials, labour, structural design and approvals.</p>
+                  {backendAssumptions.length > 0 ? (
+                    <div className="estimate-disclaimer">
+                      {backendAssumptions.slice(0, 2).map((asm, i) => (
+                        <p key={i} style={{ margin: "3px 0", fontSize: "0.85em" }}>• {asm}</p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="estimate-disclaimer">Preliminary estimate only. Sourced from Tamil Nadu PWD & CPWD specification rates.</p>
+                  )}
                 </>
               ) : (
                 <p className="estimate-disclaimer">The model did not supply a built-up area, so a plan-specific cost estimate is not available yet.</p>

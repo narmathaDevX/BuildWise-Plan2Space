@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getProjectSummary } from "./services/api";
 
 import {
   ArrowRight,
@@ -221,6 +222,24 @@ function App() {
 ================================================================ */
 
 function Dashboard({ onStartPlanning }) {
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    getProjectSummary()
+      .then((data) => {
+        if (active) setSummary(data);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <>
@@ -337,150 +356,157 @@ function Dashboard({ onStartPlanning }) {
           PROJECT SNAPSHOT
       ========================================================== */}
 
-      <section className="section">
-
-        <div className="section-heading-row">
-
-          <div>
-
-            <span className="small-label">
-              CURRENT PROJECT
-            </span>
-
-
-            <h2>
-              My Dream Home
-            </h2>
-
-
-            <p>
-              <MapPin size={14} />
-              Tamil Nadu
-            </p>
-
+      {loading ? (
+        <section className="section">
+          <div className="section-heading-row">
+            <div>
+              <span className="small-label">CURRENT PROJECT</span>
+              <h2>Loading project...</h2>
+              <p>Fetching your latest construction plan details.</p>
+            </div>
           </div>
-
-
-          <span className="planning-badge">
-            Planning
-          </span>
-
-        </div>
-
-
-        <div className="stats-row">
-
-          <Stat
-            icon={<Ruler size={18} />}
-            label="Plot area"
-            value="2,400"
-            unit="sq.ft"
-          />
-
-
-          <Stat
-            icon={<House size={18} />}
-            label="Built-up area"
-            value="1,850"
-            unit="sq.ft"
-          />
-
-
-          <Stat
-            icon={<Wallet size={18} />}
-            label="Estimated cost"
-            value="₹32.5L"
-            unit="within budget"
-          />
-
-
-          <Stat
-            icon={<Clock3 size={18} />}
-            label="Estimated duration"
-            value="10"
-            unit="months"
-          />
-
-        </div>
-
-      </section>
-
-
-      {/* ==========================================================
-          PROJECT PROGRESS
-      ========================================================== */}
-
-      <section className="section progress-section">
-
-        <div className="section-heading-row">
-
-          <div>
-
-            <span className="small-label">
-              PROJECT JOURNEY
-            </span>
-
-
-            <h2>
-              From plot to home
-            </h2>
-
+        </section>
+      ) : !summary?.has_project ? (
+        <section className="section">
+          <div className="section-heading-row">
+            <div>
+              <span className="small-label">NO ACTIVE PROJECT</span>
+              <h2>Start your first house plan</h2>
+              <p>Configure plot dimensions, room schedule, and budget to begin.</p>
+            </div>
+            <button className="primary-button" onClick={onStartPlanning}>
+              Start planning
+              <ArrowRight size={17} />
+            </button>
           </div>
+        </section>
+      ) : (
+        <>
+          <section className="section">
+
+            <div className="section-heading-row">
+
+              <div>
+
+                <span className="small-label">
+                  CURRENT PROJECT
+                </span>
 
 
-          <span className="progress-number">
-            18%
-          </span>
-
-        </div>
+                <h2>
+                  {summary.name}
+                </h2>
 
 
-        <div className="timeline">
+                <p>
+                  <MapPin size={14} />
+                  {summary.location}
+                </p>
 
-          <div className="timeline-line">
-
-            <div
-              style={{
-                width: "18%",
-              }}
-            />
-
-          </div>
+              </div>
 
 
-          <TimelineItem
-            number="01"
-            title="Planning"
-            active
-          />
+              <span className="planning-badge">
+                {summary.status || "Planning"}
+              </span>
+
+            </div>
 
 
-          <TimelineItem
-            number="02"
-            title="Foundation"
-          />
+            <div className="stats-row">
+
+              <Stat
+                icon={<Ruler size={18} />}
+                label="Plot area"
+                value={Number(summary.plot_area || 2400).toLocaleString()}
+                unit="sq.ft"
+              />
 
 
-          <TimelineItem
-            number="03"
-            title="Structure"
-          />
+              <Stat
+                icon={<House size={18} />}
+                label="Built-up area"
+                value={Number(summary.built_up_area || 1850).toLocaleString()}
+                unit="sq.ft"
+              />
 
 
-          <TimelineItem
-            number="04"
-            title="Finishing"
-          />
+              <Stat
+                icon={<Wallet size={18} />}
+                label="Estimated cost"
+                value={summary.cost_formatted || `₹${((summary.estimated_cost || 3250000) / 100000).toFixed(1)}L`}
+                unit={summary.budget_status || "within budget"}
+              />
 
 
-          <TimelineItem
-            number="05"
-            title="Complete"
-          />
+              <Stat
+                icon={<Clock3 size={18} />}
+                label="Estimated duration"
+                value={String(summary.estimated_months || 10)}
+                unit="months"
+              />
 
-        </div>
+            </div>
 
-      </section>
+          </section>
+
+
+          {/* ==========================================================
+              PROJECT PROGRESS
+          ========================================================== */}
+
+          <section className="section progress-section">
+
+            <div className="section-heading-row">
+
+              <div>
+
+                <span className="small-label">
+                  PROJECT JOURNEY
+                </span>
+
+
+                <h2>
+                  From plot to home
+                </h2>
+
+              </div>
+
+
+              <span className="progress-number">
+                {summary.progress_percent || 0}%
+              </span>
+
+            </div>
+
+
+            <div className="timeline">
+
+              <div className="timeline-line">
+
+                <div
+                  style={{
+                    width: `${summary.progress_percent || 0}%`,
+                  }}
+                />
+
+              </div>
+
+
+              {(summary.timeline_steps || []).map((step, idx) => (
+                <TimelineItem
+                  key={step.name}
+                  number={String(idx + 1).padStart(2, "0")}
+                  title={step.name}
+                  active={step.status === "active"}
+                />
+              ))}
+
+            </div>
+
+          </section>
+        </>
+      )}
 
 
       {/* ==========================================================

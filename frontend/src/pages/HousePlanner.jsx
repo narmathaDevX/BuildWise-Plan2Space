@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   ArrowLeft,
@@ -7,6 +7,7 @@ import {
   MapPin,
   Sparkles,
 } from "lucide-react";
+import { estimateAffordability } from "../services/api";
 
 function HousePlanner({ onBack, onGenerate }) {
   const [step, setStep] = useState(1);
@@ -265,6 +266,8 @@ function PlotStep({ form, update, area }) {
           <div className="input-with-unit">
             <input
               type="number"
+              min="15"
+              max="300"
               value={form.length}
               onChange={(e) =>
                 update("length", Number(e.target.value))
@@ -272,6 +275,11 @@ function PlotStep({ form, update, area }) {
             />
             <small>ft</small>
           </div>
+          {(form.length < 15 || form.length > 300) && (
+            <small style={{ color: "#ef4444", display: "block", marginTop: "4px" }}>
+              Length must be 15–300 ft
+            </small>
+          )}
         </label>
 
         <label>
@@ -280,6 +288,8 @@ function PlotStep({ form, update, area }) {
           <div className="input-with-unit">
             <input
               type="number"
+              min="15"
+              max="300"
               value={form.width}
               onChange={(e) =>
                 update("width", Number(e.target.value))
@@ -287,6 +297,11 @@ function PlotStep({ form, update, area }) {
             />
             <small>ft</small>
           </div>
+          {(form.width < 15 || form.width > 300) && (
+            <small style={{ color: "#ef4444", display: "block", marginTop: "4px" }}>
+              Width must be 15–300 ft
+            </small>
+          )}
         </label>
 
       </div>
@@ -460,6 +475,51 @@ function RequirementsStep({ form, update }) {
 ============================================================ */
 
 function BudgetStep({ form, update }) {
+  const [affordability, setAffordability] = useState(null);
+  const [loadingAffordability, setLoadingAffordability] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setLoadingAffordability(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await estimateAffordability(form);
+        if (active) setAffordability(res);
+      } catch {
+        // fallback gracefully
+      } finally {
+        if (active) setLoadingAffordability(false);
+      }
+    }, 350);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [
+    form.budget,
+    form.monthlyBudget,
+    form.quality,
+    form.width,
+    form.length,
+    form.floors,
+    form.bedrooms,
+    form.bathrooms,
+    form.location,
+  ]);
+
+  const label = loadingAffordability
+    ? "Evaluating..."
+    : affordability?.affordability?.label || "Good";
+  const ratio = affordability?.affordability?.ratio || 1.0;
+  const barWidth = loadingAffordability
+    ? "50%"
+    : `${Math.min(100, Math.max(15, Math.round(ratio * 100)))}%`;
+  const explanation = loadingAffordability
+    ? "Evaluating monthly budget against projected construction burn..."
+    : affordability?.affordability?.explanation ||
+      "We'll use this to estimate how construction can be phased over time.";
+
   return (
     <div className="planner-form">
 
@@ -506,6 +566,11 @@ function BudgetStep({ form, update }) {
             }
           />
         </div>
+        {form.monthlyBudget > form.budget && (
+          <small style={{ color: "#ef4444", display: "block", marginTop: "4px" }}>
+            Warning: Monthly budget cannot exceed total budget.
+          </small>
+        )}
 
       </label>
 
@@ -550,16 +615,15 @@ function BudgetStep({ form, update }) {
 
         <div>
           <span>Monthly affordability</span>
-          <strong>Good</strong>
+          <strong>{label}</strong>
         </div>
 
         <div className="affordability-bar">
-          <div />
+          <div style={{ width: barWidth, transition: "width 0.3s ease" }} />
         </div>
 
         <small>
-          We'll use this to estimate how construction
-          can be phased over time.
+          {explanation}
         </small>
 
       </div>

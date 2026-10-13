@@ -1,0 +1,53 @@
+{
+  "as_of": "October 2026",
+  "currency": "INR",
+  "sources": [
+    {
+      "authority": "Central Public Works Department (CPWD)",
+      "document": "Plinth Area Rates (PAR)",
+      "year": 2024,
+      "verified": true
+    },
+    {
+      "authority": "Government of Tamil Nadu Public Works Department (TN PWD)",
+      "document": "Schedule of Rates (Building Works)",
+      "year": 2025,
+      "verified": true
+    }
+  ],
+  "base_rates_per_sqft": {
+    "Economy": 1800,
+    "Standard": 2200,
+    "Premium": 2800
+  },
+  "category_split_percentages": {
+    "Economy": {
+      "structure": 35.0,
+      "masonry": 19.0,
+      "electrical_plumbing": 15.0,
+      "flooring_finishing": 21.0,
+      "doors_windows": 10.0
+    },
+    "Standard": {
+      "structure": 34.0,
+      "masonry": 18.0,
+      "electrical_plumbing": 15.0,
+      "flooring_finishing": 22.0,
+      "doors_windows": 11.0
+    },
+    "Premium": {
+      "structure": 32.0,
+      "masonry": 17.0,
+      "electrical_plumbing": 16.0,
+      "flooring_finishing": 23.0,
+      "doors_windows": 12.0
+    }
+  },
+  "uncertainty_band_pct": 5.0,
+  "multi_storey_factors": {
+    "1": 1.00,
+    "2": 1.04,
+    "3": 1.08,
+    "4": 1.12
+  }
+}

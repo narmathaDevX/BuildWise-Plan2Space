@@ -1,0 +1,20 @@
+{
+  "as_of": "October 2026",
+  "default_multiplier": 1.00,
+  "state": "Tamil Nadu",
+  "cities": {
+    "chennai": { "multiplier": 1.12, "tier": "Tier-1 Metro", "note": "High labor demand and transport restrictions" },
+    "coimbatore": { "multiplier": 1.06, "tier": "Tier-2 Industrial", "note": "Moderate labor and material availability" },
+    "madurai": { "multiplier": 1.00, "tier": "Tier-2 Baseline", "note": "Central Tamil Nadu baseline rates" },
+    "tiruchirappalli": { "multiplier": 0.98, "tier": "Tier-2 Baseline", "note": "Cauvery basin river sand access" },
+    "trichy": { "multiplier": 0.98, "tier": "Tier-2 Baseline", "note": "Cauvery basin river sand access" },
+    "salem": { "multiplier": 0.97, "tier": "Tier-3 Manufacturing", "note": "Proximity to steel and aggregate quarries" },
+    "tirunelveli": { "multiplier": 0.96, "tier": "Tier-3 Regional", "note": "South Tamil Nadu regional rates" },
+    "vellore": { "multiplier": 0.99, "tier": "Tier-3 Regional", "note": "Northern belt rates" },
+    "erode": { "multiplier": 0.98, "tier": "Tier-3 Regional", "note": "Western industrial belt rates" },
+    "thanjavur": { "multiplier": 0.97, "tier": "Tier-3 Delta", "note": "Delta agricultural zone rates" },
+    "dindigul": { "multiplier": 0.98, "tier": "Tier-3 Regional", "note": "Central South Tamil Nadu regional rates" },
+    "kancheepuram": { "multiplier": 1.08, "tier": "Tier-2 Metro Fringe", "note": "Chennai peripheral construction corridor" },
+    "tiruvallur": { "multiplier": 1.07, "tier": "Tier-2 Metro Fringe", "note": "Chennai peripheral corridor" }
+  }
+}

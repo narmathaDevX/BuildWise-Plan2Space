@@ -1,5 +1,4 @@
-
-const API_BASE_URL = "http://127.0.0.1:8000";
+import { API_BASE_URL } from "./api";
 
 function getRoomRequirements(form) {
   const rooms = [
@@ -56,6 +55,22 @@ function getRoomRequirements(form) {
     });
   }
 
+  if (form.parking) {
+    rooms.push({
+      id: "parking",
+      type: "parking",
+      min_area: 150,
+    });
+  }
+
+  if (form.balcony) {
+    rooms.push({
+      id: "balcony",
+      type: "balcony",
+      min_area: 50,
+    });
+  }
+
   return rooms;
 }
 
@@ -82,10 +97,16 @@ export function buildEngineRequest(form, seed = 42) {
         num_alternatives: 3,
         seed,
       },
+      quality: form.quality || "Standard",
+      location: form.location || "Tamil Nadu",
+      budget: Number(form.budget || 3500000),
+      monthly_budget: Number(form.monthlyBudget || 300000),
     },
     options: {
       num_alternatives: 3,
       seed,
+      quality: form.quality || "Standard",
+      location: form.location || "Tamil Nadu",
     },
   };
 }
@@ -102,9 +123,8 @@ export async function generateHousePlans(form, seed = 42) {
   const result = await response.json();
 
   if (!response.ok) {
-    throw new Error(
-      result.detail || "Unable to generate house plans."
-    );
+    const detailMsg = typeof result.detail === "string" ? result.detail : "Unable to generate house plans.";
+    throw new Error(detailMsg);
   }
 
   if (!Array.isArray(result.plans) || result.plans.length === 0) {
