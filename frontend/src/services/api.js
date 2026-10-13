@@ -232,3 +232,11 @@ export async function registerUser(email, password, name = "Builder") {
 export async function getMe() {
   return request("/api/auth/me");
 }
+
+export async function getMaterialsDataset() {
+  return request("/api/projects/current/materials/dataset");
+}
+
+export function getMaterialsCsvUrl() {
+  return `${API_BASE_URL}/api/projects/current/materials/dataset/csv`;
+}

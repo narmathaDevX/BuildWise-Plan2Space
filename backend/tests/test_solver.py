@@ -130,3 +130,42 @@ def test_syntax_validation_errors():
             "floors": 1,
             "rooms": [{"id": "r1", "type": "swimming_pool", "min_area": 100}],
         }).validate_request_syntax()
+
+
+def test_architectural_archetypes_distinct_layouts():
+    req = {
+        "units": "ft",
+        "plot": {"width": 40.0, "depth": 60.0},
+        "road_side": "N",
+        "setbacks": {"front": 5.0, "rear": 3.0, "left": 3.0, "right": 3.0},
+        "floors": 1,
+        "rooms": [
+            {"id": "living", "type": "living", "min_area": 120},
+            {"id": "kitchen", "type": "kitchen", "min_area": 50},
+            {"id": "dining", "type": "dining", "min_area": 70},
+            {"id": "master", "type": "master_bedroom", "min_area": 120},
+            {"id": "master_bath", "type": "attached_bathroom", "min_area": 30, "attached_to": "master"},
+            {"id": "bed2", "type": "bedroom", "min_area": 100},
+            {"id": "bath2", "type": "bathroom", "min_area": 30},
+            {"id": "pooja", "type": "pooja", "min_area": 25},
+            {"id": "utility", "type": "utility", "min_area": 30},
+        ],
+        "solver_options": {"num_alternatives": 3, "seed": 42},
+    }
+
+    # Generate initial alternatives with seed 42
+    res1 = FloorPlanSolver(req, {"seed": 42}).solve()
+    assert len(res1["plans"]) == 3
+
+    # Generate next alternative with seed 43 (simulating "Generate another option")
+    res2 = FloorPlanSolver(req, {"seed": 43}).solve()
+    assert len(res2["plans"]) == 3
+
+    # All plans in res1 have distinct plan_ids and titles
+    plan_names = [p["name"] for p in res1["plans"]]
+    assert len(set(plan_names)) == len(plan_names)
+
+    # Cross-check that plans feature archetype names
+    for p in res1["plans"] + res2["plans"]:
+        assert any(keyword in p["name"] for keyword in ["Vastu", "Great-Room", "Generational", "Breezeway"])
+

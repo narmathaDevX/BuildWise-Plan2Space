@@ -118,3 +118,43 @@ This checklist tracks the implementation of backend, database, cost/schedule/mat
   - All 23 Pytest backend tests passing (`pytest backend/tests/`).
   - Frontend production build passing (`npm run build`).
   - Captured updated verification screenshots in `docs/screenshots/after/`.
+
+---
+
+## Phase 10: Architectural Archetypes, Day-1 Unchecked Checklist, PWD SOR Provenance & Full Login (Latest Enhancements)
+- [x] **4 Distinct Architectural Floor Plan Archetypes on "Generate Another Option" (`solver.py`)**:
+  - Developed 4 genuinely distinct architectural layout archetypes selected deterministically via `(seed + alt_index) % 4`:
+    1. **Traditional Vastu Courtyard Layout**: North-East street-facing formal living, central Brahmasthan dining hall core, East Agni kitchen & utility, South-West Niruthi master suite.
+    2. **Contemporary Open Great-Room Layout**: Integrated open social lounge, modern island kitchen with breakfast counter, split bedrooms with rear garden-facing master suite.
+    3. **Split-Wing Generational Suite Layout**: Ground-floor elderly / guest suite at front with step-free entry, central family dining, and private rear master wing.
+    4. **Linear Breezeway & Dual Master Suite Layout**: Cross-ventilated breezeway dining and kitchen along side axis, balanced dual master bedroom suites at rear.
+  - Successive calls to "Generate another option" append completely distinct architectural layouts with unique room coordinates, functional adjacencies, and titles (`Layout A: Traditional Vastu...`, `Layout B: Contemporary Open Great-Room...`).
+  - Added test `test_architectural_archetypes_distinct_layouts()` in `backend/tests/test_solver.py`.
+- [x] **Clean Day-by-Day Site Work Checklist (Starting Unchecked at Day 1)**:
+  - Reset all daily tasks across Days 1–40 in `DEFAULT_SITE_TASKS` and SQLite database to `completed: False`, `postponed_count: 0`.
+  - Construction page defaults cleanly to Day 1 showing unchecked initial site execution tasks (`Site clearing and boundary benchmark setup`, `Plot setback and road margin verification`).
+  - On-site workers/homebuilders manually check tasks upon completion or click "Postpone (+1 Day)".
+- [x] **Authentic Tamil Nadu Materials Dataset & Provenance Section (`Materials.jsx`, `tamilnadu_pwd_bai_materials_dataset.json/.csv`)**:
+  - Curated complete 17-item dataset citing:
+    - **Tamil Nadu PWD Schedule of Rates (SOR) 2025–2026** (Buildings & Structural Works, G.O. Ms No. 142/PWD).
+    - **Builders Association of India (BAI) Tamil Nadu State Centre Material Cost Index** (Chennai, Coimbatore, Madurai, Trichy, Salem).
+    - **Wholesale ground market hubs**: Koyambedu Steel Yard, Sriperumbudur Logistics Corridor, Karur Quarry Belt, Parrys Corner Tiles Depot.
+  - Implemented `GET /api/projects/current/materials/dataset` and `GET /api/projects/current/materials/dataset/csv` download endpoints.
+  - Added "Price Sources & Dataset" button and modal on `Materials.jsx` featuring official citations, category filter pills, interactive rate comparison table (PWD SOR vs Market Rate vs IS Standards), and one-click CSV download.
+- [x] **Full Login & Registration UI (`AuthModal.jsx`, `App.jsx`)**:
+  - Implemented `AuthModal.jsx` with tabs for "Sign In" and "Create Account", email/password validation, and Quick Demo Sign In (`guest@buildwise.local`).
+  - Integrated with backend JWT auth (`/api/auth/login`, `/api/auth/register`, `/api/auth/me`).
+  - Added "Sign In" button in top nav header, user profile avatar, and account dropdown with "Switch Account" and "Sign Out" actions.
+- [x] **End-to-End Test & Screenshot Verification**:
+  - 24 Pytest backend tests passing in `backend/tests/`.
+  - Frontend production build passing in 200ms (`npm run build`).
+  - Captured live browser screenshots in `docs/screenshots/after/`:
+    - `11_dashboard_with_login_cta.png`
+    - `12_auth_login_modal.png`
+    - `13_construction_day1_unchecked.png`
+    - `13b_construction_task_checked_live.png`
+    - `14_materials_page_with_provenance_btn.png`
+    - `15_materials_price_sources_modal.png`
+    - `16_generated_plan_distinct_options.png`
+    - `17_generated_plan_appended_archetype.png`
+

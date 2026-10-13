@@ -43,7 +43,7 @@ function Construction() {
   const [loading, setLoading] = useState(true);
 
   // Daily Tasks Checklist State
-  const [currentDay, setCurrentDay] = useState(null);
+  const [currentDay, setCurrentDay] = useState(1);
   const [tasksData, setTasksData] = useState(null);
   const [tasksLoading, setTasksLoading] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);

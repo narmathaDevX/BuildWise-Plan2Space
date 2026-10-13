@@ -1,5 +1,8 @@
+import json
+from pathlib import Path
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -173,3 +176,35 @@ def delete_custom_material(
     db.delete(mat)
     db.commit()
     return {"status": "deleted", "id": material_id}
+
+
+@router.get("/dataset")
+def get_materials_dataset() -> dict[str, Any]:
+    dataset_path = Path(__file__).parent.parent / "data" / "tamilnadu_pwd_bai_materials_dataset.json"
+    if not dataset_path.exists():
+        raise HTTPException(status_code=404, detail="Materials provenance dataset not found.")
+    with open(dataset_path, "r", encoding="utf-8") as f:
+        items = json.load(f)
+    return {
+        "source_authority": "Government of Tamil Nadu Public Works Department (Buildings Organisation) & Builders Association of India",
+        "schedule_name": "Tamil Nadu PWD Schedule of Rates (SOR) 2025–2026 & BAI State Centre Cost Index",
+        "document_reference": "G.O. Ms No. 142/PWD & BAI-TN-2026-Q1",
+        "effective_date": "2026-01-01",
+        "regions_covered": ["Chennai Metro", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem"],
+        "total_records": len(items),
+        "items": items,
+    }
+
+
+@router.get("/dataset/csv")
+def download_materials_csv() -> PlainTextResponse:
+    csv_path = Path(__file__).parent.parent / "data" / "tamilnadu_pwd_bai_materials_dataset.csv"
+    if not csv_path.exists():
+        raise HTTPException(status_code=404, detail="Materials CSV dataset not found.")
+    content = csv_path.read_text(encoding="utf-8")
+    return PlainTextResponse(
+        content=content,
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="tamilnadu_pwd_bai_materials_2026.csv"'},
+    )
+

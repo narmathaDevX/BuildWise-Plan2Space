@@ -11,7 +11,7 @@ DEFAULT_SITE_TASKS: list[dict[str, Any]] = [
         "description": "Clear wild vegetation, roots, and debris. Fix permanent benchmark level pillars at the plot corner.",
         "trade": "Survey & Earthwork",
         "is_critical": True,
-        "completed": True,
+        "completed": False,
     },
     {
         "day_number": 1,
@@ -20,7 +20,7 @@ DEFAULT_SITE_TASKS: list[dict[str, Any]] = [
         "description": "Cross-check CMDA / DTCP setback compliance (5 ft front, 3 ft sides and rear) using steel measuring tape.",
         "trade": "Site Engineer",
         "is_critical": True,
-        "completed": True,
+        "completed": False,
     },
     {
         "day_number": 2,
@@ -29,7 +29,7 @@ DEFAULT_SITE_TASKS: list[dict[str, Any]] = [
         "description": "Erect cement storage godown (dry platform raised 6 inches off ground) and temporary watchman shed.",
         "trade": "Carpentry & Helpers",
         "is_critical": False,
-        "completed": True,
+        "completed": False,
     },
     {
         "day_number": 2,
@@ -38,7 +38,7 @@ DEFAULT_SITE_TASKS: list[dict[str, Any]] = [
         "description": "Install temporary 5HP submersible borewell pump connection and TNEB temporary single-phase meter board.",
         "trade": "Electrical & Plumbing",
         "is_critical": True,
-        "completed": True,
+        "completed": False,
     },
     {
         "day_number": 3,
@@ -47,7 +47,7 @@ DEFAULT_SITE_TASKS: list[dict[str, Any]] = [
         "description": "Drive timber batter boards, stretch nylon mason strings along grid axes, and mark column footing pits with white lime powder.",
         "trade": "Head Mason",
         "is_critical": True,
-        "completed": True,
+        "completed": False,
     },
 
     # Stage 2: Foundation (Days 4–10)
@@ -58,7 +58,7 @@ DEFAULT_SITE_TASKS: list[dict[str, Any]] = [
         "description": "Excavate 5 ft x 5 ft x 5 ft footing pits in hard red gravel soil; stack excavated soil 3 ft away from pit edges.",
         "trade": "Earthwork JCB / Labours",
         "is_critical": True,
-        "completed": True,
+        "completed": False,
     },
     {
         "day_number": 5,
@@ -67,7 +67,7 @@ DEFAULT_SITE_TASKS: list[dict[str, Any]] = [
         "description": "Mechanically tamp pit beds and spray Chlorpyrifos 20% EC emulsifiable concentrate @ 5 litres per sq.m.",
         "trade": "Pest Control Specialist",
         "is_critical": False,
-        "completed": True,
+        "completed": False,
     },
     {
         "day_number": 6,
@@ -76,7 +76,7 @@ DEFAULT_SITE_TASKS: list[dict[str, Any]] = [
         "description": "Lay 4-inch thick PCC mud mat bed using 40mm blue metal aggregate to provide a rigid level surface for footing mats.",
         "trade": "Concreting Team",
         "is_critical": True,
-        "completed": True,
+        "completed": False,
     },
     {
         "day_number": 7,

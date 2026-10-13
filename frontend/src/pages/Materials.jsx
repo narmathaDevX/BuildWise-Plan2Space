@@ -15,11 +15,19 @@ import {
   Zap,
   Home,
   Check,
+  Database,
+  Download,
+  ExternalLink,
+  X,
+  FileSpreadsheet,
+  Info,
 } from "lucide-react";
 import {
   getProjectMaterials,
   updateMaterial,
   addCustomMaterial,
+  getMaterialsDataset,
+  getMaterialsCsvUrl,
 } from "../services/api";
 
 function formatCurrency(value) {
@@ -64,6 +72,27 @@ function Materials() {
     unit: "bags",
     rate: "",
   });
+
+  // Materials Provenance Dataset State
+  const [showProvenanceModal, setShowProvenanceModal] = useState(false);
+  const [provenanceData, setProvenanceData] = useState(null);
+  const [datasetLoading, setDatasetLoading] = useState(false);
+  const [datasetFilter, setDatasetFilter] = useState("All");
+
+  const loadProvenanceDataset = async () => {
+    if (provenanceData) return;
+    try {
+      setDatasetLoading(true);
+      const res = await getMaterialsDataset();
+      if (res) {
+        setProvenanceData(res);
+      }
+    } catch (err) {
+      console.error("Failed to load materials dataset:", err);
+    } finally {
+      setDatasetLoading(false);
+    }
+  };
 
   const loadMaterials = async () => {
     try {
@@ -201,13 +230,28 @@ function Materials() {
           </p>
         </div>
 
-        <button
-          className="outline-button"
-          onClick={() => setShowAddForm((prev) => !prev)}
-        >
-          {showAddForm ? <Package size={16} /> : <Plus size={16} />}
-          {showAddForm ? "Close Form" : "Add material"}
-        </button>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+          <button
+            className="outline-button"
+            onClick={() => {
+              setShowProvenanceModal(true);
+              loadProvenanceDataset();
+            }}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            <Database size={16} />
+            Price Sources & Dataset
+          </button>
+
+          <button
+            className="outline-button"
+            onClick={() => setShowAddForm((prev) => !prev)}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            {showAddForm ? <Package size={16} /> : <Plus size={16} />}
+            {showAddForm ? "Close Form" : "Add material"}
+          </button>
+        </div>
       </section>
 
       {/* INLINE ADD MATERIAL FORM */}
@@ -636,6 +680,264 @@ function Materials() {
           </p>
         </div>
       </section>
+
+      {/* PROVENANCE DATASET MODAL */}
+      {showProvenanceModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            backdropFilter: "blur(5px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: "20px",
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowProvenanceModal(false);
+          }}
+        >
+          <div
+            style={{
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              maxWidth: "1000px",
+              width: "100%",
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 25px 50px rgba(0,0,0,0.3)",
+              position: "relative",
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "24px 28px 20px",
+                borderBottom: "1px solid var(--border)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                background: "var(--surface)",
+              }}
+            >
+              <div>
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    letterSpacing: "1px",
+                    color: "var(--accent)",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  TAMIL NADU CONSTRUCTION COST REPOSITORY
+                </span>
+                <h2 style={{ fontSize: "22px", margin: "6px 0 4px", fontWeight: 700 }}>
+                  Government PWD Schedule of Rates (SOR) & BAI Market Dataset
+                </h2>
+                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-soft)" }}>
+                  Verified price benchmarks from Tamil Nadu PWD 2025–2026 SOR (G.O. Ms No. 142/PWD) and Builders Association of India state indices.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowProvenanceModal(false)}
+                aria-label="Close dataset dialog"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--text-soft)",
+                  cursor: "pointer",
+                  padding: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Citations Grid */}
+            <div
+              style={{
+                padding: "16px 28px",
+                background: "var(--surface-2)",
+                borderBottom: "1px solid var(--border)",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                gap: "12px",
+              }}
+            >
+              <div style={{ padding: "10px 12px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--accent)", marginBottom: "4px" }}>
+                  1. TN PWD SOR 2025–2026
+                </div>
+                <div style={{ fontSize: "12px", color: "var(--text-soft)", lineHeight: 1.4 }}>
+                  Official Buildings & Structural Works rate schedule approved by the Engineer-in-Chief, PWD Tamil Nadu (G.O. Ms No. 142/PWD).
+                </div>
+              </div>
+
+              <div style={{ padding: "10px 12px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--green)", marginBottom: "4px" }}>
+                  2. BUILDERS ASSOCIATION (BAI)
+                </div>
+                <div style={{ fontSize: "12px", color: "var(--text-soft)", lineHeight: 1.4 }}>
+                  Quarterly Material Cost Index published by BAI Tamil Nadu State Centre for Chennai, Coimbatore, Madurai, Trichy & Salem.
+                </div>
+              </div>
+
+              <div style={{ padding: "10px 12px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text)", marginBottom: "4px" }}>
+                  3. WHOLESALE HUB QUOTATIONS
+                </div>
+                <div style={{ fontSize: "12px", color: "var(--text-soft)", lineHeight: 1.4 }}>
+                  Ground wholesale rates from Koyambedu Steel Yard, Sriperumbudur Corridor, Karur Quarry Belt & Parrys Tiles Depot.
+                </div>
+              </div>
+            </div>
+
+            {/* Filter & Download Controls */}
+            <div
+              style={{
+                padding: "12px 28px",
+                borderBottom: "1px solid var(--border)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "10px",
+              }}
+            >
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                {["All", "Structure", "Masonry", "Finishing", "Electrical & Plumbing", "Doors & Windows"].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setDatasetFilter(cat)}
+                    style={{
+                      padding: "4px 10px",
+                      fontSize: "12px",
+                      border: datasetFilter === cat ? "1px solid var(--accent)" : "1px solid var(--border)",
+                      background: datasetFilter === cat ? "var(--accent)" : "var(--surface)",
+                      color: datasetFilter === cat ? "#fff" : "var(--text)",
+                      cursor: "pointer",
+                      fontWeight: datasetFilter === cat ? 600 : 400,
+                    }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              <a
+                href={getMaterialsCsvUrl()}
+                download="tamilnadu_pwd_bai_materials_2026.csv"
+                className="outline-button"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontSize: "12px",
+                  padding: "6px 12px",
+                  textDecoration: "none",
+                }}
+              >
+                <Download size={14} /> Download CSV Dataset
+              </a>
+            </div>
+
+            {/* Table Area */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "0 28px 20px" }}>
+              {datasetLoading ? (
+                <div style={{ textAlign: "center", padding: "40px", color: "var(--text-soft)" }}>
+                  Loading Tamil Nadu PWD & BAI dataset...
+                </div>
+              ) : (
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontSize: "12px",
+                    marginTop: "16px",
+                    textAlign: "left",
+                  }}
+                >
+                  <thead>
+                    <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--text-soft)" }}>
+                      <th style={{ padding: "8px 10px", fontWeight: 600 }}>Code</th>
+                      <th style={{ padding: "8px 10px", fontWeight: 600 }}>Material Name & Specification</th>
+                      <th style={{ padding: "8px 10px", fontWeight: 600 }}>Category</th>
+                      <th style={{ padding: "8px 10px", fontWeight: 600 }}>Unit</th>
+                      <th style={{ padding: "8px 10px", fontWeight: 600, textAlign: "right" }}>PWD SOR Rate</th>
+                      <th style={{ padding: "8px 10px", fontWeight: 600, textAlign: "right" }}>Model Market Rate</th>
+                      <th style={{ padding: "8px 10px", fontWeight: 600 }}>Primary Source Citation</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {((provenanceData?.items || []).filter(
+                      (item) => datasetFilter === "All" || item.category === datasetFilter
+                    )).map((item, idx) => (
+                      <tr
+                        key={item.item_code || idx}
+                        style={{
+                          borderBottom: "1px solid var(--border)",
+                          background: idx % 2 === 0 ? "transparent" : "var(--surface-2)",
+                        }}
+                      >
+                        <td style={{ padding: "10px", fontFamily: "monospace", color: "var(--accent)", fontWeight: 600 }}>
+                          {item.item_code}
+                        </td>
+                        <td style={{ padding: "10px" }}>
+                          <strong style={{ display: "block", color: "var(--text)" }}>{item.name}</strong>
+                          <span style={{ fontSize: "11px", color: "var(--text-soft)" }}>{item.specification}</span>
+                        </td>
+                        <td style={{ padding: "10px", color: "var(--text-soft)" }}>{item.category}</td>
+                        <td style={{ padding: "10px", color: "var(--text-soft)" }}>{item.unit}</td>
+                        <td style={{ padding: "10px", textAlign: "right", fontFamily: "monospace" }}>
+                          ₹{item.pwd_sor_rate.toLocaleString("en-IN")}
+                        </td>
+                        <td style={{ padding: "10px", textAlign: "right", fontFamily: "monospace", fontWeight: 700, color: "var(--accent)" }}>
+                          ₹{item.effective_model_rate.toLocaleString("en-IN")}
+                        </td>
+                        <td style={{ padding: "10px", fontSize: "11px", color: "var(--text-soft)", maxWidth: "260px" }}>
+                          <div>{item.source_citation}</div>
+                          <div style={{ color: "var(--text-muted)", marginTop: "2px" }}>📍 {item.market_hub}</div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div
+              style={{
+                padding: "12px 28px",
+                borderTop: "1px solid var(--border)",
+                background: "var(--surface)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                fontSize: "11px",
+                color: "var(--text-soft)",
+              }}
+            >
+              <span>Verified for Tamil Nadu residential builds • Schedule Year 2025–2026</span>
+              <button
+                onClick={() => setShowProvenanceModal(false)}
+                className="outline-button"
+                style={{ padding: "5px 14px", fontSize: "12px" }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

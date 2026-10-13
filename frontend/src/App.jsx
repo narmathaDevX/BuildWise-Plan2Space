@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getProjectSummary } from "./services/api";
+import { getProjectSummary, getMe } from "./services/api";
 
 import {
   ArrowRight,
@@ -14,6 +14,9 @@ import {
   HardHat,
   Boxes,
   FileText,
+  LogIn,
+  LogOut,
+  User as UserIcon,
 } from "lucide-react";
 
 import { useTheme } from "./context/ThemeContext";
@@ -23,6 +26,7 @@ import GeneratedPlan from "./pages/GeneratedPlan";
 import Construction from "./pages/Construction";
 import Materials from "./pages/Materials";
 import Reports from "./pages/Reports";
+import AuthModal from "./components/AuthModal";
 
 
 function App() {
@@ -31,6 +35,32 @@ function App() {
   const [activePage, setActivePage] = useState("Dashboard");
   const [showGeneratedPlan, setShowGeneratedPlan] = useState(false);
   const [generatedForm, setGeneratedForm] = useState(null);
+
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState("login");
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const user = await getMe();
+        if (user && user.email) {
+          setCurrentUser(user);
+        }
+      } catch {
+        // Guest mode fallback
+      }
+    }
+    checkAuth();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("buildwise_token");
+    setCurrentUser(null);
+    setShowUserMenu(false);
+  };
 
   // ============================================================
   // NAVIGATION
@@ -122,7 +152,7 @@ function App() {
         </nav>
 
 
-        <div className="nav-right">
+        <div className="nav-right" style={{ display: "flex", alignItems: "center", gap: "10px", position: "relative" }}>
 
           <button
             className="theme-toggle"
@@ -136,9 +166,82 @@ function App() {
             )}
           </button>
 
-          <div className="profile-circle">
-            N
-          </div>
+          {currentUser && currentUser.email !== "guest@buildwise.local" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <button
+                className="profile-circle"
+                onClick={() => setShowUserMenu((prev) => !prev)}
+                title={`${currentUser.name || "User"} (${currentUser.email})`}
+                style={{ cursor: "pointer", border: "none" }}
+              >
+                {(currentUser.name || "U")[0].toUpperCase()}
+              </button>
+              {showUserMenu && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(var(--nav-height) - 10px)",
+                    right: "0px",
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+                    padding: "16px",
+                    zIndex: 1000,
+                    minWidth: "220px",
+                  }}
+                >
+                  <div style={{ fontSize: "14px", fontWeight: 700, marginBottom: "2px" }}>
+                    {currentUser.name}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "var(--text-soft)", marginBottom: "12px" }}>
+                    {currentUser.email}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      setAuthMode("login");
+                      setAuthModalOpen(true);
+                    }}
+                    className="outline-button"
+                    style={{ width: "100%", padding: "7px", fontSize: "12px", justifyContent: "center", marginBottom: "8px" }}
+                  >
+                    <LogIn size={13} style={{ marginRight: "6px" }} /> Switch Account
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="outline-button"
+                    style={{ width: "100%", padding: "7px", fontSize: "12px", justifyContent: "center" }}
+                  >
+                    <LogOut size={13} style={{ marginRight: "6px" }} /> Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <button
+                className="outline-button"
+                onClick={() => {
+                  setAuthModalOpen(true);
+                  setAuthMode("login");
+                }}
+                style={{ padding: "6px 14px", fontSize: "13px" }}
+              >
+                <LogIn size={15} style={{ marginRight: "6px" }} /> Sign In
+              </button>
+              <div
+                className="profile-circle"
+                onClick={() => {
+                  setAuthModalOpen(true);
+                  setAuthMode("login");
+                }}
+                style={{ cursor: "pointer" }}
+                title="Guest Mode - Click to Sign In"
+              >
+                N
+              </div>
+            </div>
+          )}
 
         </div>
 
@@ -201,16 +304,18 @@ function App() {
       ============================================================ */}
 
       <footer>
-
-        <span>
-          BUILDWISE
-        </span>
-
-        <span>
-          Plan smarter. Build better.
-        </span>
-
+        <span>BUILDWISE</span>
+        <span>Plan smarter. Build better.</span>
       </footer>
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onAuthSuccess={(user) => {
+          setCurrentUser(user);
+        }}
+        initialMode={authMode}
+      />
 
     </div>
   );

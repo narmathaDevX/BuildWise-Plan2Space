@@ -25,6 +25,30 @@ SUPPORTED_ROOM_TYPES = {
 HABITABLE_TYPES = {"living", "dining", "master_bedroom", "bedroom", "study"}
 WET_TYPES = {"kitchen", "attached_bathroom", "bathroom", "utility"}
 
+ARCHETYPE_CONFIGS = [
+    {
+        "id": "vastu_classic",
+        "title": "Traditional Vastu Courtyard Layout",
+        "concept": "Street-facing living, central Brahmasthan dining hall, East-facing kitchen, and South-West master suite.",
+    },
+    {
+        "id": "open_great_room",
+        "title": "Contemporary Open Great-Room Layout",
+        "concept": "Integrated social great-room, modern island kitchen, split bedroom suites with rear master garden outlook.",
+    },
+    {
+        "id": "split_wing_generational",
+        "title": "Split-Wing Generational Suite Layout",
+        "concept": "Ground-floor elderly / guest bedroom at front, central family gathering space, and private master wing at rear.",
+    },
+    {
+        "id": "linear_breezeway",
+        "title": "Linear Breezeway & Dual Master Suite Layout",
+        "concept": "Cross-ventilated dining breezeway, dedicated service corridor, and balanced dual master bedroom suites.",
+    },
+]
+
+
 
 class Envelope:
     def __init__(self, min_x: float, min_y: float, max_x: float, max_y: float):
@@ -268,7 +292,8 @@ class FloorPlanSolver:
         plans.sort(key=lambda p: p["score"], reverse=True)
         for idx, p in enumerate(plans):
             letter = chr(ord("A") + idx)
-            p["name"] = f"Layout {letter}"
+            arch_title = p.get("archetype_name", "Architectural Plan")
+            p["name"] = f"Layout {letter}: {arch_title}"
 
         return {
             "plans": plans[: self.num_alternatives],
@@ -348,9 +373,11 @@ class FloorPlanSolver:
         alt_index: int,
     ) -> dict[str, Any] | None:
         rng = random.Random(seed)
+        arch_index = (self.seed + alt_index) % len(ARCHETYPE_CONFIGS)
+        arch_cfg = ARCHETYPE_CONFIGS[arch_index]
 
         # Generate Ground Floor
-        g_placed = self._layout_floor(rng, envelope, ground_rooms, is_ground=True, alt_index=alt_index)
+        g_placed = self._layout_floor(rng, envelope, ground_rooms, is_ground=True, alt_index=alt_index, arch_idx=arch_index)
         if not g_placed:
             return None
 
@@ -364,7 +391,7 @@ class FloorPlanSolver:
 
         # Generate Upper Floors (if any)
         for fl_level, u_rooms in upper_rooms.items():
-            u_placed = self._layout_floor(rng, envelope, u_rooms, is_ground=False, alt_index=alt_index)
+            u_placed = self._layout_floor(rng, envelope, u_rooms, is_ground=False, alt_index=alt_index, arch_idx=arch_index)
             if u_placed:
                 floors_data.append(
                     {
@@ -390,7 +417,10 @@ class FloorPlanSolver:
 
         return {
             "plan_id": plan_hash,
-            "name": f"Layout Option {alt_index + 1}",
+            "name": f"Layout Option {alt_index + 1}: {arch_cfg['title']}",
+            "archetype_id": arch_cfg["id"],
+            "archetype_name": arch_cfg["title"],
+            "archetype_concept": arch_cfg["concept"],
             "score": score_breakdown["total"],
             "score_breakdown": score_breakdown,
             "request_echo": {
@@ -416,13 +446,14 @@ class FloorPlanSolver:
         rooms_to_place: list[dict[str, Any]],
         is_ground: bool,
         alt_index: int = 0,
+        arch_idx: int = 0,
     ) -> list[RectRoom] | None:
         if not rooms_to_place:
             return []
 
         W = envelope.width
         D = envelope.height
-        jitter = round(rng.uniform(-0.5, 0.5), 2)
+        jitter = round(rng.uniform(-0.35, 0.35), 2)
 
         # Categorize rooms
         living = next((r for r in rooms_to_place if r.get("type") == "living"), None)
@@ -441,12 +472,10 @@ class FloorPlanSolver:
         balcony = next((r for r in rooms_to_place if r.get("type") == "balcony"), None)
         staircase = next((r for r in rooms_to_place if r.get("type") == "staircase"), None)
 
-        # Raw normalized boxes (id, name, type, u, v, w, h)
         raw_boxes: list[tuple[str, str, str, float, float, float, float]] = []
 
-        # If on upper floor or single living room without service wing
         if not is_ground:
-            # Upper floor: Front Balcony / Lounge, Bedrooms, Baths, Staircase
+            # UPPER FLOOR LAYOUT
             h_front = round(min(16.0, max(12.0, D * 0.35 + jitter)), 2)
             h_rear = round(D - h_front, 2)
 
@@ -472,100 +501,17 @@ class FloorPlanSolver:
                 raw_boxes.append((cb["id"], cb.get("name", "Bathroom"), "bathroom", 0.0, h_front, 6.0, 8.0))
 
         else:
-            # GROUND FLOOR:
-            use_4_bands = (len(other_beds) >= 1 or D >= 44.0) and D >= 38.0
+            # GROUND FLOOR ARCHETYPES
 
-            if use_4_bands:
-                # 4-BAND ARCHITECTURAL LAYOUT
-                h_front = round(min(17.0, max(14.0, D * 0.30 + jitter)), 2)
-                h_mid1 = round(min(15.0, max(12.0, D * 0.25 - jitter)), 2)
-                h_mid2 = round(min(9.0, max(7.5, D * 0.16)), 2)
-                h_rear = round(D - h_front - h_mid1 - h_mid2, 2)
-
-                # Band 1: Front Zone (Parking + Living Room)
-                if parking:
-                    w_park = round(min(12.0, max(10.0, W * 0.32)), 2)
-                    w_liv = round(W - w_park, 2)
-                    if alt_index % 2 == 1:
-                        # Parking on Right, Living on Left
-                        if living:
-                            raw_boxes.append((living["id"], living.get("name", "Living Room"), "living", 0.0, 0.0, w_liv, h_front))
-                        raw_boxes.append((parking["id"], parking.get("name", "Car Parking"), "parking", w_liv, 0.0, w_park, h_front))
-                    else:
-                        # Parking on Left, Living on Right (Vastu classic)
-                        raw_boxes.append((parking["id"], parking.get("name", "Car Parking"), "parking", 0.0, 0.0, w_park, h_front))
-                        if living:
-                            raw_boxes.append((living["id"], living.get("name", "Living Room"), "living", w_park, 0.0, w_liv, h_front))
-                elif living:
-                    raw_boxes.append((living["id"], living.get("name", "Living Room"), "living", 0.0, 0.0, W, h_front))
-
-                # Band 2: Mid-Front Zone (Bedroom 3 / Guest Room, Dining Hall, Kitchen)
-                y_mid1 = h_front
-                b3 = other_beds[-1] if len(other_beds) >= 2 else (other_beds[0] if other_beds else None)
-                w_b3 = round(min(12.0, max(9.5, W * 0.32)), 2) if b3 else 0.0
-                w_kit = round(min(12.0, max(9.5, W * 0.31)), 2) if kitchen else 0.0
-                w_din = round(W - w_b3 - w_kit, 2)
-
-                if b3:
-                    b3_name = b3.get("name") or ("Bedroom 3" if len(other_beds) >= 2 else "Bedroom 2")
-                    raw_boxes.append((b3["id"], b3_name, "bedroom", 0.0, y_mid1, w_b3, h_mid1))
-                if dining:
-                    raw_boxes.append((dining["id"], dining.get("name", "Dining Hall"), "dining", w_b3, y_mid1, w_din, h_mid1))
-                if kitchen:
-                    raw_boxes.append((kitchen["id"], kitchen.get("name", "Kitchen"), "kitchen", round(w_b3 + w_din, 2), y_mid1, w_kit, h_mid1))
-
-                # Band 3: Services, Hallway & Bathrooms
-                y_mid2 = round(y_mid1 + h_mid1, 2)
-                w_mb = 6.0 if master_bath else 0.0
-                w_cb = 6.0 if common_baths else 0.0
-                w_pj = 5.5 if pooja else 0.0
-                w_ut = 6.5 if utility else 0.0
-                w_hall = round(max(5.0, W - w_mb - w_cb - w_pj - w_ut), 2)
-
-                curr_x = 0.0
-                if master_bath:
-                    raw_boxes.append((master_bath["id"], master_bath.get("name", "Attached Bathroom"), "attached_bathroom", curr_x, y_mid2, w_mb, h_mid2))
-                    curr_x = round(curr_x + w_mb, 2)
-                if common_baths:
-                    cb = common_baths[0]
-                    raw_boxes.append((cb["id"], cb.get("name", "Common Bathroom"), "bathroom", curr_x, y_mid2, w_cb, h_mid2))
-                    curr_x = round(curr_x + w_cb, 2)
-                raw_boxes.append(("hallway", "Circulation Hallway", "corridor", curr_x, y_mid2, w_hall, h_mid2))
-                curr_x = round(curr_x + w_hall, 2)
-                if pooja:
-                    raw_boxes.append((pooja["id"], pooja.get("name", "Pooja Room"), "pooja", curr_x, y_mid2, w_pj, h_mid2))
-                    curr_x = round(curr_x + w_pj, 2)
-                if utility:
-                    rem_ut = round(W - curr_x, 2)
-                    raw_boxes.append((utility["id"], utility.get("name", "Utility Area"), "utility", curr_x, y_mid2, rem_ut, h_mid2))
-
-                # Band 4: Rear Private Bedroom Wing (Master Bedroom + Bedroom 2)
-                y_rear = round(y_mid2 + h_mid2, 2)
-                rear_beds = [master] if master else []
-                for b in other_beds:
-                    if b != b3:
-                        rear_beds.append(b)
-
-                if not rear_beds:
-                    rear_beds = [master] if master else []
-
-                n_rb = max(1, len(rear_beds))
-                w_rcol = round(W / n_rb, 2)
-                for i, bed in enumerate(rear_beds):
-                    bx = round(i * w_rcol, 2)
-                    bw = round(W - bx if i == n_rb - 1 else w_rcol, 2)
-                    bname = bed.get("name") or ("Master Bedroom" if bed == master else f"Bedroom {i+1}")
-                    raw_boxes.append((bed["id"], bname, bed.get("type", "bedroom"), bx, y_rear, bw, h_rear))
-
-            else:
-                # 3-BAND ARCHITECTURAL LAYOUT (for 1 or 2 bedrooms, or compact depths)
-                h_front = round(min(17.0, max(13.0, D * 0.33 + jitter)), 2)
-                h_mid = round(min(18.0, max(13.0, D * 0.34 - jitter)), 2)
+            # ARCHETYPE 0: Traditional Vastu Classic (Central Courtyard / Brahmasthan Core)
+            if arch_idx == 0:
+                h_front = round(min(17.0, max(13.0, D * 0.32 + jitter)), 2)
+                h_mid = round(min(18.0, max(13.0, D * 0.35 - jitter)), 2)
                 h_rear = round(D - h_front - h_mid, 2)
 
-                # Front
+                # Front: Parking Left, Formal Living Right (North-East entry quadrant)
                 if parking:
-                    w_park = round(min(12.0, max(10.0, W * 0.32)), 2)
+                    w_park = round(min(12.0, max(9.5, W * 0.32)), 2)
                     w_liv = round(W - w_park, 2)
                     raw_boxes.append((parking["id"], parking.get("name", "Car Parking"), "parking", 0.0, 0.0, w_park, h_front))
                     if living:
@@ -573,19 +519,21 @@ class FloorPlanSolver:
                 elif living:
                     raw_boxes.append((living["id"], living.get("name", "Living Room"), "living", 0.0, 0.0, W, h_front))
 
-                # Mid
-                w_serv = round(min(11.0, max(9.0, W * 0.30)), 2) if kitchen else 0.0
-                w_left = 6.5 if (pooja or common_baths) else 0.0
-                w_din = round(W - w_serv - w_left, 2)
+                # Mid: Left (Pooja/Bath), Center (Dining Brahmasthan), Right (Kitchen/Utility Agni)
+                w_left = round(min(7.5, max(5.5, W * 0.20)), 2) if (pooja or common_baths) else 0.0
+                w_right = round(min(12.0, max(9.0, W * 0.30)), 2) if (kitchen or utility) else 0.0
+                w_din = round(W - w_left - w_right, 2)
                 y_mid = h_front
 
-                if common_baths and pooja:
-                    raw_boxes.append((pooja["id"], pooja.get("name", "Pooja Room"), "pooja", 0.0, y_mid, w_left, round(h_mid * 0.4, 2)))
-                    raw_boxes.append((common_baths[0]["id"], common_baths[0].get("name", "Common Bathroom"), "bathroom", 0.0, round(y_mid + h_mid * 0.4, 2), w_left, round(h_mid * 0.6, 2)))
-                elif common_baths:
-                    raw_boxes.append((common_baths[0]["id"], common_baths[0].get("name", "Common Bathroom"), "bathroom", 0.0, y_mid, w_left, h_mid))
+                if pooja and common_baths:
+                    hp = round(h_mid * 0.45, 2)
+                    hb = round(h_mid - hp, 2)
+                    raw_boxes.append((pooja["id"], pooja.get("name", "Pooja Room"), "pooja", 0.0, y_mid, w_left, hp))
+                    raw_boxes.append((common_baths[0]["id"], common_baths[0].get("name", "Common Bathroom"), "bathroom", 0.0, round(y_mid + hp, 2), w_left, hb))
                 elif pooja:
                     raw_boxes.append((pooja["id"], pooja.get("name", "Pooja Room"), "pooja", 0.0, y_mid, w_left, h_mid))
+                elif common_baths:
+                    raw_boxes.append((common_baths[0]["id"], common_baths[0].get("name", "Common Bathroom"), "bathroom", 0.0, y_mid, w_left, h_mid))
 
                 if dining:
                     raw_boxes.append((dining["id"], dining.get("name", "Dining Hall"), "dining", w_left, y_mid, w_din, h_mid))
@@ -593,31 +541,258 @@ class FloorPlanSolver:
                 if kitchen and utility:
                     hk = round(h_mid * 0.65, 2)
                     hu = round(h_mid - hk, 2)
-                    raw_boxes.append((kitchen["id"], kitchen.get("name", "Kitchen"), "kitchen", round(w_left + w_din, 2), y_mid, w_serv, hk))
-                    raw_boxes.append((utility["id"], utility.get("name", "Utility Area"), "utility", round(w_left + w_din, 2), round(y_mid + hk, 2), w_serv, hu))
+                    raw_boxes.append((kitchen["id"], kitchen.get("name", "Kitchen"), "kitchen", round(w_left + w_din, 2), y_mid, w_right, hk))
+                    raw_boxes.append((utility["id"], utility.get("name", "Utility Area"), "utility", round(w_left + w_din, 2), round(y_mid + hk, 2), w_right, hu))
                 elif kitchen:
-                    raw_boxes.append((kitchen["id"], kitchen.get("name", "Kitchen"), "kitchen", round(w_left + w_din, 2), y_mid, w_serv, h_mid))
+                    raw_boxes.append((kitchen["id"], kitchen.get("name", "Kitchen"), "kitchen", round(w_left + w_din, 2), y_mid, w_right, h_mid))
+                elif utility:
+                    raw_boxes.append((utility["id"], utility.get("name", "Utility Area"), "utility", round(w_left + w_din, 2), y_mid, w_right, h_mid))
 
-                # Rear
+                # Rear: Master Suite on Left (SW Niruthi corner), Other Beds on Right
                 y_rear = round(y_mid + h_mid, 2)
-                rear_beds = [master] if master else []
-                rear_beds.extend(other_beds)
-                if not rear_beds:
-                    rear_beds = [master] if master else []
-
-                n_rb = max(1, len(rear_beds))
-                w_rcol = round(W / n_rb, 2)
-                for i, bed in enumerate(rear_beds):
-                    bx = round(i * w_rcol, 2)
-                    bw = round(W - bx if i == n_rb - 1 else w_rcol, 2)
-                    if bed == master and master_bath:
+                if other_beds:
+                    w_mzone = round(W * 0.52, 2)
+                    w_ozone = round(W - w_mzone, 2)
+                    if master_bath:
                         w_mb = 5.5
-                        w_mbed = round(bw - w_mb, 2)
-                        raw_boxes.append((master["id"], "Master Bedroom", "master_bedroom", bx, y_rear, w_mbed, h_rear))
-                        raw_boxes.append((master_bath["id"], "Attached Bathroom", "attached_bathroom", round(bx + w_mbed, 2), y_rear, w_mb, h_rear))
-                    else:
-                        bname = bed.get("name") or ("Master Bedroom" if bed == master else f"Bedroom {i+1}")
-                        raw_boxes.append((bed["id"], bname, bed.get("type", "bedroom"), bx, y_rear, bw, h_rear))
+                        w_mbed = round(w_mzone - w_mb, 2)
+                        if master:
+                            raw_boxes.append((master["id"], master.get("name", "Master Bedroom"), "master_bedroom", 0.0, y_rear, w_mbed, h_rear))
+                        raw_boxes.append((master_bath["id"], master_bath.get("name", "Attached Bathroom"), "attached_bathroom", w_mbed, y_rear, w_mb, h_rear))
+                    elif master:
+                        raw_boxes.append((master["id"], master.get("name", "Master Bedroom"), "master_bedroom", 0.0, y_rear, w_mzone, h_rear))
+
+                    n_ob = len(other_beds)
+                    w_ob_col = round(w_ozone / n_ob, 2)
+                    for i, bed in enumerate(other_beds):
+                        bx = round(w_mzone + i * w_ob_col, 2)
+                        bw = round(W - bx if i == n_ob - 1 else w_ob_col, 2)
+                        bname = bed.get("name") or f"Bedroom {i+2}"
+                        raw_boxes.append((bed["id"], bname, "bedroom", bx, y_rear, bw, h_rear))
+                else:
+                    if master_bath:
+                        w_mb = 6.0
+                        w_mbed = round(W - w_mb, 2)
+                        if master:
+                            raw_boxes.append((master["id"], master.get("name", "Master Bedroom"), "master_bedroom", 0.0, y_rear, w_mbed, h_rear))
+                        raw_boxes.append((master_bath["id"], master_bath.get("name", "Attached Bathroom"), "attached_bathroom", w_mbed, y_rear, w_mb, h_rear))
+                    elif master:
+                        raw_boxes.append((master["id"], master.get("name", "Master Bedroom"), "master_bedroom", 0.0, y_rear, W, h_rear))
+
+            # ARCHETYPE 1: Contemporary Open Great-Room Layout
+            elif arch_idx == 1:
+                h_front = round(min(18.0, max(14.0, D * 0.35 + jitter)), 2)
+                h_mid = round(min(16.0, max(12.0, D * 0.30 - jitter)), 2)
+                h_rear = round(D - h_front - h_mid, 2)
+
+                # Front: Open Living Lounge Left, Parking Right
+                if parking:
+                    w_park = round(min(12.0, max(9.5, W * 0.32)), 2)
+                    w_liv = round(W - w_park, 2)
+                    if living:
+                        raw_boxes.append((living["id"], living.get("name", "Living Lounge"), "living", 0.0, 0.0, w_liv, h_front))
+                    raw_boxes.append((parking["id"], parking.get("name", "Car Parking"), "parking", w_liv, 0.0, w_park, h_front))
+                elif living:
+                    raw_boxes.append((living["id"], living.get("name", "Living Lounge"), "living", 0.0, 0.0, W, h_front))
+
+                # Mid: Left (Island Kitchen & Utility), Center (Open Dining), Right (Pooja & Bath)
+                y_mid = h_front
+                w_kit_zone = round(min(12.0, max(9.0, W * 0.32)), 2) if (kitchen or utility) else 0.0
+                w_right = round(min(8.0, max(6.0, W * 0.22)), 2) if (pooja or common_baths) else 0.0
+                w_din = round(W - w_kit_zone - w_right, 2)
+
+                if kitchen and utility:
+                    hk = round(h_mid * 0.68, 2)
+                    hu = round(h_mid - hk, 2)
+                    raw_boxes.append((kitchen["id"], kitchen.get("name", "Island Kitchen"), "kitchen", 0.0, y_mid, w_kit_zone, hk))
+                    raw_boxes.append((utility["id"], utility.get("name", "Utility Area"), "utility", 0.0, round(y_mid + hk, 2), w_kit_zone, hu))
+                elif kitchen:
+                    raw_boxes.append((kitchen["id"], kitchen.get("name", "Island Kitchen"), "kitchen", 0.0, y_mid, w_kit_zone, h_mid))
+                elif utility:
+                    raw_boxes.append((utility["id"], utility.get("name", "Utility Area"), "utility", 0.0, y_mid, w_kit_zone, h_mid))
+
+                if dining:
+                    raw_boxes.append((dining["id"], dining.get("name", "Dining Area"), "dining", w_kit_zone, y_mid, w_din, h_mid))
+
+                x_right = round(w_kit_zone + w_din, 2)
+                if pooja and common_baths:
+                    hp = round(h_mid * 0.45, 2)
+                    hb = round(h_mid - hp, 2)
+                    raw_boxes.append((pooja["id"], pooja.get("name", "Pooja Room"), "pooja", x_right, y_mid, w_right, hp))
+                    raw_boxes.append((common_baths[0]["id"], common_baths[0].get("name", "Common Bathroom"), "bathroom", x_right, round(y_mid + hp, 2), w_right, hb))
+                elif pooja:
+                    raw_boxes.append((pooja["id"], pooja.get("name", "Pooja Room"), "pooja", x_right, y_mid, w_right, h_mid))
+                elif common_baths:
+                    raw_boxes.append((common_baths[0]["id"], common_baths[0].get("name", "Common Bathroom"), "bathroom", x_right, y_mid, w_right, h_mid))
+
+                # Rear: Bed 2 on Left, Master Suite on Right with garden outlook
+                y_rear = round(y_mid + h_mid, 2)
+                if other_beds:
+                    w_b2 = round(W * 0.46, 2)
+                    w_msuite = round(W - w_b2, 2)
+                    bed2 = other_beds[0]
+                    raw_boxes.append((bed2["id"], bed2.get("name", "Bedroom 2"), "bedroom", 0.0, y_rear, w_b2, h_rear))
+
+                    if master_bath:
+                        w_mb = 5.5
+                        w_mbed = round(w_msuite - w_mb, 2)
+                        if master:
+                            raw_boxes.append((master["id"], master.get("name", "Master Suite"), "master_bedroom", w_b2, y_rear, w_mbed, h_rear))
+                        raw_boxes.append((master_bath["id"], master_bath.get("name", "Attached Bathroom"), "attached_bathroom", round(w_b2 + w_mbed, 2), y_rear, w_mb, h_rear))
+                    elif master:
+                        raw_boxes.append((master["id"], master.get("name", "Master Suite"), "master_bedroom", w_b2, y_rear, w_msuite, h_rear))
+                else:
+                    if master_bath:
+                        w_mb = 6.0
+                        w_mbed = round(W - w_mb, 2)
+                        if master:
+                            raw_boxes.append((master["id"], master.get("name", "Master Suite"), "master_bedroom", 0.0, y_rear, w_mbed, h_rear))
+                        raw_boxes.append((master_bath["id"], master_bath.get("name", "Attached Bathroom"), "attached_bathroom", w_mbed, y_rear, w_mb, h_rear))
+                    elif master:
+                        raw_boxes.append((master["id"], master.get("name", "Master Suite"), "master_bedroom", 0.0, y_rear, W, h_rear))
+
+            # ARCHETYPE 2: Split-Wing Generational Suite Layout
+            elif arch_idx == 2:
+                h_front = round(min(17.0, max(13.0, D * 0.33 + jitter)), 2)
+                h_mid = round(min(17.0, max(13.0, D * 0.33 - jitter)), 2)
+                h_rear = round(D - h_front - h_mid, 2)
+
+                # Front: Step-Free Bedroom Suite Left, Family Living Center, Parking Right
+                y_front = 0.0
+                w_park = round(min(11.5, max(9.5, W * 0.30)), 2) if parking else 0.0
+                front_bed = other_beds[0] if other_beds else None
+                w_fbed = round(min(13.0, max(10.0, W * 0.35)), 2) if front_bed else 0.0
+                w_liv = round(W - w_fbed - w_park, 2)
+
+                if front_bed:
+                    raw_boxes.append((front_bed["id"], front_bed.get("name", "Guest / Elderly Suite"), "bedroom", 0.0, y_front, w_fbed, h_front))
+                if living:
+                    raw_boxes.append((living["id"], living.get("name", "Family Living Room"), "living", w_fbed, y_front, w_liv, h_front))
+                if parking:
+                    raw_boxes.append((parking["id"], parking.get("name", "Car Parking"), "parking", round(w_fbed + w_liv, 2), y_front, w_park, h_front))
+
+                # Mid: Left (Common Bath & Pooja), Center (Family Dining), Right (Kitchen & Utility)
+                y_mid = h_front
+                w_left = round(min(8.0, max(6.0, W * 0.22)), 2) if (common_baths or pooja) else 0.0
+                w_right = round(min(12.0, max(9.0, W * 0.30)), 2) if (kitchen or utility) else 0.0
+                w_din = round(W - w_left - w_right, 2)
+
+                if common_baths and pooja:
+                    hb = round(h_mid * 0.55, 2)
+                    hp = round(h_mid - hb, 2)
+                    raw_boxes.append((common_baths[0]["id"], common_baths[0].get("name", "Common Bathroom"), "bathroom", 0.0, y_mid, w_left, hb))
+                    raw_boxes.append((pooja["id"], pooja.get("name", "Pooja Room"), "pooja", 0.0, round(y_mid + hb, 2), w_left, hp))
+                elif common_baths:
+                    raw_boxes.append((common_baths[0]["id"], common_baths[0].get("name", "Common Bathroom"), "bathroom", 0.0, y_mid, w_left, h_mid))
+                elif pooja:
+                    raw_boxes.append((pooja["id"], pooja.get("name", "Pooja Room"), "pooja", 0.0, y_mid, w_left, h_mid))
+
+                if dining:
+                    raw_boxes.append((dining["id"], dining.get("name", "Family Dining"), "dining", w_left, y_mid, w_din, h_mid))
+
+                x_right = round(w_left + w_din, 2)
+                if kitchen and utility:
+                    hk = round(h_mid * 0.65, 2)
+                    hu = round(h_mid - hk, 2)
+                    raw_boxes.append((kitchen["id"], kitchen.get("name", "Kitchen"), "kitchen", x_right, y_mid, w_right, hk))
+                    raw_boxes.append((utility["id"], utility.get("name", "Utility Area"), "utility", x_right, round(y_mid + hk, 2), w_right, hu))
+                elif kitchen:
+                    raw_boxes.append((kitchen["id"], kitchen.get("name", "Kitchen"), "kitchen", x_right, y_mid, w_right, h_mid))
+                elif utility:
+                    raw_boxes.append((utility["id"], utility.get("name", "Utility Area"), "utility", x_right, y_mid, w_right, h_mid))
+
+                # Rear: Master Suite on Left, Additional Bedroom (if any) on Right
+                y_rear = round(y_mid + h_mid, 2)
+                rear_beds = other_beds[1:] if len(other_beds) > 1 else []
+                if rear_beds:
+                    w_b3 = round(W * 0.45, 2)
+                    w_mzone = round(W - w_b3, 2)
+                    if master_bath:
+                        w_mb = 5.5
+                        w_mbed = round(w_mzone - w_mb, 2)
+                        if master:
+                            raw_boxes.append((master["id"], master.get("name", "Master Bedroom"), "master_bedroom", 0.0, y_rear, w_mbed, h_rear))
+                        raw_boxes.append((master_bath["id"], master_bath.get("name", "Attached Bathroom"), "attached_bathroom", w_mbed, y_rear, w_mb, h_rear))
+                    elif master:
+                        raw_boxes.append((master["id"], master.get("name", "Master Bedroom"), "master_bedroom", 0.0, y_rear, w_mzone, h_rear))
+
+                    raw_boxes.append((rear_beds[0]["id"], rear_beds[0].get("name", "Bedroom 3"), "bedroom", w_mzone, y_rear, w_b3, h_rear))
+                else:
+                    if master_bath:
+                        w_mb = 6.0
+                        w_mbed = round(W - w_mb, 2)
+                        if master:
+                            raw_boxes.append((master["id"], master.get("name", "Master Bedroom"), "master_bedroom", 0.0, y_rear, w_mbed, h_rear))
+                        raw_boxes.append((master_bath["id"], master_bath.get("name", "Attached Bathroom"), "attached_bathroom", w_mbed, y_rear, w_mb, h_rear))
+                    elif master:
+                        raw_boxes.append((master["id"], master.get("name", "Master Bedroom"), "master_bedroom", 0.0, y_rear, W, h_rear))
+
+            # ARCHETYPE 3: Linear Breezeway & Dual Master Suite Layout
+            else:
+                h_front = round(min(16.0, max(12.0, D * 0.29 + jitter)), 2)
+                h_mid = round(min(18.0, max(14.0, D * 0.35 - jitter)), 2)
+                h_rear = round(D - h_front - h_mid, 2)
+
+                # Front: Parking Left, Formal Living Right
+                if parking:
+                    w_park = round(min(12.0, max(9.5, W * 0.32)), 2)
+                    w_liv = round(W - w_park, 2)
+                    raw_boxes.append((parking["id"], parking.get("name", "Car Parking"), "parking", 0.0, 0.0, w_park, h_front))
+                    if living:
+                        raw_boxes.append((living["id"], living.get("name", "Formal Living"), "living", w_park, 0.0, w_liv, h_front))
+                elif living:
+                    raw_boxes.append((living["id"], living.get("name", "Formal Living"), "living", 0.0, 0.0, W, h_front))
+
+                # Mid: Linear Breezeway Dining & Kitchen
+                y_mid = h_front
+                w_din = round(min(14.0, max(10.0, W * 0.38)), 2) if dining else 0.0
+                w_kit = round(min(12.0, max(9.0, W * 0.32)), 2) if kitchen else 0.0
+                w_serv = round(W - w_din - w_kit, 2)
+
+                if dining:
+                    raw_boxes.append((dining["id"], dining.get("name", "Breezeway Dining"), "dining", 0.0, y_mid, w_din, h_mid))
+
+                x_kit = w_din
+                if kitchen and utility:
+                    hk = round(h_mid * 0.65, 2)
+                    hu = round(h_mid - hk, 2)
+                    raw_boxes.append((kitchen["id"], kitchen.get("name", "Linear Kitchen"), "kitchen", x_kit, y_mid, w_kit, hk))
+                    raw_boxes.append((utility["id"], utility.get("name", "Utility Area"), "utility", x_kit, round(y_mid + hk, 2), w_kit, hu))
+                elif kitchen:
+                    raw_boxes.append((kitchen["id"], kitchen.get("name", "Linear Kitchen"), "kitchen", x_kit, y_mid, w_kit, h_mid))
+
+                x_serv = round(w_din + w_kit, 2)
+                if pooja and common_baths:
+                    hp = round(h_mid * 0.45, 2)
+                    hb = round(h_mid - hp, 2)
+                    raw_boxes.append((pooja["id"], pooja.get("name", "Pooja Room"), "pooja", x_serv, y_mid, w_serv, hp))
+                    raw_boxes.append((common_baths[0]["id"], common_baths[0].get("name", "Common Bathroom"), "bathroom", x_serv, round(y_mid + hp, 2), w_serv, hb))
+                elif pooja:
+                    raw_boxes.append((pooja["id"], pooja.get("name", "Pooja Room"), "pooja", x_serv, y_mid, w_serv, h_mid))
+                elif common_baths:
+                    raw_boxes.append((common_baths[0]["id"], common_baths[0].get("name", "Common Bathroom"), "bathroom", x_serv, y_mid, w_serv, h_mid))
+
+                # Rear: Dual Primary Suites
+                y_rear = round(y_mid + h_mid, 2)
+                w_m1 = round(W * 0.5, 2)
+                w_m2 = round(W - w_m1, 2)
+
+                # Primary Suite 1
+                if master_bath:
+                    w_mb = 5.5
+                    w_mbed = round(w_m1 - w_mb, 2)
+                    if master:
+                        raw_boxes.append((master["id"], master.get("name", "Primary Suite 1"), "master_bedroom", 0.0, y_rear, w_mbed, h_rear))
+                    raw_boxes.append((master_bath["id"], master_bath.get("name", "Attached Bathroom 1"), "attached_bathroom", w_mbed, y_rear, w_mb, h_rear))
+                elif master:
+                    raw_boxes.append((master["id"], master.get("name", "Primary Suite 1"), "master_bedroom", 0.0, y_rear, w_m1, h_rear))
+
+                # Suite 2
+                bed2 = other_beds[0] if other_beds else None
+                if bed2:
+                    raw_boxes.append((bed2["id"], bed2.get("name", "Primary Suite 2"), "bedroom", w_m1, y_rear, w_m2, h_rear))
+                elif not master:
+                    raw_boxes.append(("extra_suite", "Suite 2", "bedroom", w_m1, y_rear, w_m2, h_rear))
 
         # Convert normalized coordinates (u, v) into global plot envelope coordinates (x, y)
         placed_rooms: list[RectRoom] = []
