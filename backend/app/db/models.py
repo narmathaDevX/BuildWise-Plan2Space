@@ -37,6 +37,7 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), default=utc_now)
 
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
+    saved_plans = relationship("SavedPlan", back_populates="user", cascade="all, delete-orphan")
 
 
 class Project(Base):
@@ -169,4 +170,74 @@ class ConstructionTask(Base):
     created_at = Column(DateTime(timezone=True), default=utc_now)
 
     project = relationship("Project", back_populates="tasks")
+
+
+class SavedPlan(Base):
+    __tablename__ = "saved_plans"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    project_id = Column(String(36), ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
+    plan_id = Column(String(64), index=True, nullable=False)
+    title = Column(String(255), nullable=False)
+    notes = Column(Text, nullable=True)
+    plan_json = Column(Text, nullable=False)
+    form_json = Column(Text, nullable=False)
+    plot_width = Column(Float, default=40.0)
+    plot_length = Column(Float, default=60.0)
+    built_up_area = Column(Float, default=0.0)
+    estimated_cost = Column(Float, default=0.0)
+    score = Column(Float, default=0.0)
+    facing = Column(String(32), default="North")
+    bedrooms = Column(Integer, default=3)
+    bathrooms = Column(Integer, default=2)
+    floors = Column(Integer, default=1)
+    quality = Column(String(32), default="Standard")
+    created_at = Column(DateTime(timezone=True), default=utc_now)
+    updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+
+    user = relationship("User", back_populates="saved_plans")
+    project = relationship("Project")
+
+    def get_plan(self) -> dict[str, Any]:
+        try:
+            return json.loads(self.plan_json)
+        except Exception:
+            return {}
+
+    def set_plan(self, data: dict[str, Any]) -> None:
+        self.plan_json = json.dumps(data)
+
+    def get_form(self) -> dict[str, Any]:
+        try:
+            return json.loads(self.form_json)
+        except Exception:
+            return {}
+
+    def set_form(self, data: dict[str, Any]) -> None:
+        self.form_json = json.dumps(data)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "plan_id": self.plan_id,
+            "title": self.title,
+            "notes": self.notes or "",
+            "plot_width": self.plot_width,
+            "plot_length": self.plot_length,
+            "built_up_area": self.built_up_area,
+            "estimated_cost": self.estimated_cost,
+            "score": self.score,
+            "facing": self.facing,
+            "bedrooms": self.bedrooms,
+            "bathrooms": self.bathrooms,
+            "floors": self.floors,
+            "quality": self.quality,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "plan": self.get_plan(),
+            "form": self.get_form(),
+        }
+
+
 

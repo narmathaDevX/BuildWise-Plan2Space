@@ -287,3 +287,54 @@ export async function getProjectMilestones() {
 export async function getTnDistrictRates() {
   return request("/api/projects/current/materials/districts");
 }
+
+/* ============================================================
+   SAVED PLANS & ARCHITECTURAL PORTFOLIO
+============================================================ */
+
+export async function getSavedPlans() {
+  return request("/api/plans/saved");
+}
+
+export async function saveLikedPlan({
+  planId,
+  title,
+  notes = "",
+  plan,
+  form,
+  builtUpArea = null,
+  estimatedCost = null,
+  score = null,
+}) {
+  return request("/api/plans/saved", {
+    method: "POST",
+    body: JSON.stringify({
+      plan_id: planId,
+      title,
+      notes,
+      plan,
+      form,
+      built_up_area: builtUpArea,
+      estimated_cost: estimatedCost,
+      score,
+    }),
+  });
+}
+
+export async function updateSavedPlan(id, { title, notes }) {
+  return request(`/api/plans/saved/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ title, notes }),
+  });
+}
+
+export async function deleteSavedPlan(id) {
+  return request(`/api/plans/saved/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getSavedPlanById(id) {
+  return request(`/api/plans/saved/${id}`);
+}
+

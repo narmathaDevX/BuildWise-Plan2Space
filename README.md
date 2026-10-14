@@ -15,6 +15,7 @@ The system combines an existing minimalist React frontend with a pure-Python Fas
 - **Schedule Simulation & Dynamic Site Checklist:** Month-by-month discrete cash-flow simulation across 7 sequential construction stages. Dynamically generates day-by-day site execution tasks ($months \times 25$ working days, e.g. Day 1 to 350) initialized completely unchecked (`completed: false`) for daily on-site physical tracking. Homeowners can manually edit tasks, reassign days, postpone tasks (+1 day), add custom items, or delete tasks.
 - **Global Reactive State Synchronization:** Switching or generating plans automatically fires global synchronization events, instantly re-aligning material bills of quantities, budget breakdowns, construction timeline, and statutory compliance across all tabs without page reloads.
 - **Materials Schedule & Regional Provenance:** Standard thumb-rule quantities with real-world Tamil Nadu PWD SOR 2025–2026 and BAI market rate provenance. Includes 5-zone district pricing multipliers, 7-trade daily wage schedules, custom material creation, and CSV dataset export.
+- **Saved Plans Portfolio & Liked Blueprint Bookmarking:** Full architectural portfolio management. Clients and homeowners can bookmark/like generated designs directly in `GeneratedPlan`, assign custom project titles and client notes (e.g., DTCP submission preferences, Vastu orientations), and inspect all saved plans from the `HousePlanner` page with actions to reload inputs into the 4-step wizard or open the CAD blueprint directly.
 - **Project Reports & Dashboard:** Comprehensive project identity, 4-metric progress grid, 4-milestone status grid, budget utilization, institutional Bank Loan Dossier (SBI / HDFC 80% LTV), and one-click printable report (`window.print()`).
 - **Authentication & Persistence:** Secure bcrypt password hashing and JWT authentication supporting registration, login, and quick demo builder sign in.
 
@@ -192,16 +193,17 @@ Execute the complete test suite:
 - `test_schedule.py`: Discrete-event cash flow simulation, predecessor order verification, monthly burn rate capacity capping, and monotonicity.
 - `test_materials.py`: Thumb-rule calculation, numeric quantities, and purchase status updates.
 - `test_tasks.py`: Day-to-day site checklist operations, task completion toggles, task postponement (+1 day), manual editing, deletion, and regeneration.
+- `test_saved_plans.py`: Saved plans portfolio lifecycle, bookmarking liked blueprints, custom titles, client notes persistence, retrieval, updates, and deletion.
 - `test_auth.py`: Bcrypt registration, login token generation, and `/api/auth/me` profile resolution.
 - `test_api.py`: FastAPI error handler returning single-string `detail` on 422 validation errors, project summary, month stepper, materials patching, custom material creation, and report endpoints.
-- **Result: 32 passed in 1.21s.**
+- **Result: 33 passed in 1.15s.**
 
 ### Building Frontend
 Verify that the production build completes without errors:
 ```bash
 cd /Users/narmathan/buildwise/frontend && npm run build
 ```
-Result: `vite v8.3.3 built client environment in ~227ms with 0 errors`.
+Result: `vite v8.3.3 built client environment in ~235ms with 0 errors`.
 
 ### Screenshot Verification
 Comprehensive visual verification screenshots are cataloged in `docs/screenshots/`:
@@ -214,6 +216,11 @@ Comprehensive visual verification screenshots are cataloged in `docs/screenshots
 - `docs/screenshots/after/verify_5_edit_task_modal.png`: Construction page manual Task Editor modal allowing on-site task customization, day re-assignment, and trade selection.
 - `docs/screenshots/after/verify_6_materials_synchronized.png`: Materials schedule automatically synchronized with active plan parameters.
 - `docs/screenshots/after/verify_7_reports_synchronized.png`: Project Report and Bank Loan Dossier automatically synchronized with the generated house plan.
+- `docs/screenshots/after/verify_8_saved_plans_portfolio_modal.png`: House Planner "Saved Plans & Blueprints Portfolio" modal with specifications, client notes, and blueprint actions.
+- `docs/screenshots/after/verify_9_loaded_into_planner.png`: House Planner Step 1 hydrated with loaded specifications from a saved blueprint.
+- `docs/screenshots/after/verify_10_save_liked_plan_modal.png`: GeneratedPlan "Save Plan to Liked Portfolio" modal with custom title and client notes entry.
+- `docs/screenshots/after/verify_11_plan_saved_toast.png`: Plan saved confirmation toast, gold star badge (`★`) on layout chips, and saved button state.
+- `docs/screenshots/after/verify_12_opened_saved_blueprint.png`: Direct recall and rendering of a saved CAD blueprint from portfolio without re-running generation.
 
 ---
 
@@ -227,6 +234,11 @@ Comprehensive visual verification screenshots are cataloged in `docs/screenshots
 | `POST` | `/api/auth/login` | Authenticate user and return JWT bearer token |
 | `GET` | `/api/auth/me` | Fetch active user profile |
 | `POST` | `/api/generate` | Generate candidate floor plans satisfying setbacks and archetypes |
+| `GET` | `/api/plans/saved` | Retrieve all saved plans and liked blueprints for authenticated user |
+| `POST` | `/api/plans/saved` | Save a liked floor plan with custom title, notes, CAD layout, and costs |
+| `GET` | `/api/plans/saved/{id}` | Retrieve specific saved blueprint layout by record ID or plan_id |
+| `PUT` | `/api/plans/saved/{id}` | Update title or client notes on a saved plan |
+| `DELETE`| `/api/plans/saved/{id}` | Remove plan from saved portfolio |
 | `POST` | `/api/estimate/affordability` | Live affordability index for Planner Step 3 |
 | `POST` | `/api/estimate/cost` | Comprehensive civil construction cost breakdown |
 | `POST` | `/api/estimate/schedule` | Month-by-month cash flow and timeline simulation |

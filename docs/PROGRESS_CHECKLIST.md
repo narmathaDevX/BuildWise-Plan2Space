@@ -303,3 +303,48 @@ This checklist tracks the implementation of backend, database, cost/schedule/mat
     - `verify_6_materials_synchronized.png` (Synchronized materials BOM)
     - `verify_7_reports_synchronized.png` (Synchronized project report and bank dossier)
 
+---
+
+## Phase 14: Saved Plans Portfolio, Liked Plans Bookmarking & Blueprint Recall (User Requested)
+- [x] **Saved Plans & Blueprints Portfolio in HousePlanner (`HousePlanner.jsx`, `App.jsx`, `api.js`)**:
+  - Added interactive "Saved Plans (N)" button in the HousePlanner header and an exploratory shortcut banner in Step 1.
+  - Built the "Saved Plans & Blueprints Portfolio" modal displaying all saved plans with key specs:
+    - Plot dimensions ($40\times 60\,\text{ft}$), orientation (East / North), BHK count, bathroom count, built-up area ($\text{sq ft}$), estimated civil cost in Lakhs, and TNCDBR 2019 compliance badge.
+    - Client notes preview (e.g. Vastu guidelines, generational suite preferences).
+    - **Load into Planner**: Automatically hydrates the 4-step wizard form with the saved plan's exact inputs and presents a green confirmation banner so the user can inspect or modify specifications.
+    - **Open Blueprint**: Immediately opens the saved CAD layout in the `GeneratedPlan` blueprint viewer without re-running generation.
+    - **Delete**: Removes the saved plan from the user's portfolio with reactive UI updates.
+- [x] **Save Liked Plans Feature in GeneratedPlan (`GeneratedPlan.jsx`, `App.jsx`, `api.js`)**:
+  - Added "Save Plan to Liked" / "Saved to Liked Plans" action button in the intro header and on the plan card next to the model score pill.
+  - Interactive "Save Plan to Liked Portfolio" modal allowing users and clients to:
+    - Give a custom layout title (e.g. *"Layout A: Split Wing Generational Suite Layout"*).
+    - Add client notes and highlights (e.g. *"Approved for DTCP submission. Client requested pooja altar in northeast corner."*).
+    - Edit existing notes or remove previously saved layouts.
+  - Visual indicators:
+    - Gold star badge (`★`) on layout selector chips for saved plans.
+    - Green checkmark pill and `"✓ Saved to Liked Plans"` state.
+    - Floating green toast confirmation: `✓ "..." saved to your liked portfolio!`.
+  - Dispatches `buildwise:saved-plans-updated` custom events so other pages reactively update without page refresh.
+- [x] **Database Schema & Backend API Endpoints (`models.py`, `routers/plans.py`, `init_db.py`)**:
+  - Created `SavedPlan` SQLAlchemy model with fields (`id`, `user_id`, `project_id`, `plan_id`, `title`, `notes`, `plan_json`, `form_json`, `plot_width`, `plot_length`, `built_up_area`, `estimated_cost`, `score`, `facing`, `bedrooms`, `bathrooms`, `floors`, `quality`, `created_at`, `updated_at`).
+  - Added RESTful endpoints in `backend/app/routers/plans.py`:
+    - `GET /api/plans/saved`: Retrieves all saved plans for the authenticated user ordered by `created_at DESC`.
+    - `POST /api/plans/saved`: Saves a liked plan with custom title, notes, CAD geometry, form specs, and costs (creates or updates).
+    - `GET /api/plans/saved/{id}`: Retrieves a specific saved plan by database ID or `plan_id`.
+    - `PUT /api/plans/saved/{id}`: Updates title or client notes.
+    - `DELETE /api/plans/saved/{id}`: Deletes a saved plan.
+  - Seeded two authentic default saved plans in `init_db.py` for immediate portfolio browsing:
+    1. *"Layout A: Split Wing Generational Suite"* (North Facing 3BHK, 2 Bath, 1856 sq ft, ₹40.85L).
+    2. *"Layout B: Traditional Vastu Courtyard Flow"* (East Facing 3BHK, 3 Bath, 1820 sq ft, ₹39.50L).
+- [x] **Testing & Visual Verification**:
+  - Created `backend/tests/test_saved_plans.py` verifying full CRUD lifecycle (`GET`, `POST`, `PUT`, `DELETE`).
+  - All 33 Pytest backend tests passing in `backend/tests/`.
+  - Frontend production build passing in 235ms (`npm run build`).
+  - Captured 5 live browser verification screenshots in `docs/screenshots/after/`:
+    - `verify_8_saved_plans_portfolio_modal.png` (Saved Plans & Blueprints Portfolio Modal in HousePlanner)
+    - `verify_9_loaded_into_planner.png` (Loaded parameters banner in HousePlanner)
+    - `verify_10_save_liked_plan_modal.png` (Save Liked Plan Modal with custom title & client notes)
+    - `verify_11_plan_saved_toast.png` (Plan saved confirmation toast & star badges)
+    - `verify_12_opened_saved_blueprint.png` (Saved blueprint opened directly from portfolio)
+
+

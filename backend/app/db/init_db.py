@@ -2,7 +2,7 @@ import json
 from datetime import date
 from sqlalchemy.orm import Session
 
-from backend.app.db.models import ConstructionTask, Estimate, Material, PlanModel, Project, User
+from backend.app.db.models import ConstructionTask, Estimate, Material, PlanModel, Project, SavedPlan, User
 from backend.app.db.session import Base, SessionLocal, engine
 from backend.app.services.auth import hash_password
 from backend.app.services.cost import calculate_cost
@@ -213,6 +213,106 @@ def init_db(db: Session | None = None) -> None:
                         )
                     )
                 db.commit()
+
+        # Seed realistic saved plans for user portfolio if none exist
+        if db.query(SavedPlan).filter(SavedPlan.user_id == user.id).count() == 0:
+            default_form = {
+                "width": 40,
+                "length": 60,
+                "facing": "North",
+                "location": "Tamil Nadu",
+                "bedrooms": 3,
+                "bathrooms": 2,
+                "floors": 1,
+                "parking": True,
+                "balcony": True,
+                "pooja": False,
+                "utility": True,
+                "budget": 3500000,
+                "monthlyBudget": 300000,
+                "quality": "Standard",
+            }
+            req1 = {
+                "units": "ft",
+                "plot": {"width": 40.0, "depth": 60.0},
+                "road_side": "N",
+                "setbacks": {"front": 5.0, "rear": 3.0, "left": 3.0, "right": 3.0},
+                "floors": 1,
+                "rooms": [
+                    {"id": "living", "type": "living", "min_area": 120},
+                    {"id": "kitchen", "type": "kitchen", "min_area": 50},
+                    {"id": "dining", "type": "dining", "min_area": 70},
+                    {"id": "master", "type": "master_bedroom", "min_area": 120},
+                    {"id": "master_bath", "type": "attached_bathroom", "min_area": 30, "attached_to": "master"},
+                    {"id": "bedroom_2", "type": "bedroom", "min_area": 100},
+                    {"id": "bedroom_3", "type": "bedroom", "min_area": 100},
+                    {"id": "bathroom_1", "type": "bathroom", "min_area": 30},
+                    {"id": "utility", "type": "utility", "min_area": 30},
+                ],
+                "solver_options": {"num_alternatives": 2, "seed": 42},
+            }
+            try:
+                solver1 = FloorPlanSolver(req1)
+                res1 = solver1.solve()
+                plans1 = res1.get("plans", [])
+                if plans1:
+                    p1 = plans1[0]
+                    db.add(
+                        SavedPlan(
+                            user_id=user.id,
+                            project_id=project.id if project else None,
+                            plan_id=p1.get("plan_id", "plan_north_3bhk_opt1"),
+                            title="Layout A: Split Wing Generational Suite",
+                            notes="Senior-friendly ground floor bedroom with attached bath; large east-facing kitchen and open verandah sit-out.",
+                            plan_json=json.dumps(p1),
+                            form_json=json.dumps(default_form),
+                            plot_width=40.0,
+                            plot_length=60.0,
+                            built_up_area=1856.0,
+                            estimated_cost=4085000.0,
+                            score=89.3,
+                            facing="North",
+                            bedrooms=3,
+                            bathrooms=2,
+                            floors=1,
+                            quality="Standard",
+                        )
+                    )
+
+                # Second plan: East facing 3BHK with Vastu alignment
+                form_east = dict(default_form, facing="East", bathrooms=3)
+                req2 = dict(req1, road_side="E")
+                req2["rooms"] = list(req1["rooms"]) + [{"id": "bathroom_2", "type": "bathroom", "min_area": 30}]
+                solver2 = FloorPlanSolver(req2, {"seed": 108})
+                res2 = solver2.solve()
+                plans2 = res2.get("plans", [])
+                if plans2:
+                    p2 = plans2[0]
+                    db.add(
+                        SavedPlan(
+                            user_id=user.id,
+                            project_id=project.id if project else None,
+                            plan_id=p2.get("plan_id", "plan_east_3bhk_vastu"),
+                            title="Layout B: Traditional Vastu Courtyard Flow",
+                            notes="Strict Vastu compliance: Southeast Agni kitchen with utility, Southwest master suite, and northeast entrance verandah.",
+                            plan_json=json.dumps(p2),
+                            form_json=json.dumps(form_east),
+                            plot_width=40.0,
+                            plot_length=60.0,
+                            built_up_area=1820.0,
+                            estimated_cost=3950000.0,
+                            score=91.5,
+                            facing="East",
+                            bedrooms=3,
+                            bathrooms=3,
+                            floors=1,
+                            quality="Standard",
+                        )
+                    )
+                db.commit()
+            except Exception as e:
+                print(f"Warning: Failed to seed saved plans: {e}")
+                db.rollback()
 
     finally:
         if owns_session:

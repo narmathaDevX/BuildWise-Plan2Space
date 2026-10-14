@@ -16,6 +16,9 @@ import {
   Home,
   AlertCircle,
   RotateCcw,
+  Bookmark,
+  Star,
+  Trash2,
 } from "lucide-react";
 import { generateHousePlans } from "../services/planApi";
 import {
@@ -23,6 +26,9 @@ import {
   estimateSchedule,
   saveCurrentProject,
   selectProjectPlan,
+  getSavedPlans,
+  saveLikedPlan,
+  deleteSavedPlan,
 } from "../services/api";
 
 const DEFAULT_FORM = {
@@ -589,7 +595,7 @@ function FloorPlan({ plan, form, compact = false }) {
   );
 }
 
-export default function GeneratedPlan({ form, onBack }) {
+export default function GeneratedPlan({ form, initialPlan = null, onBack }) {
   const data = { ...DEFAULT_FORM, ...(form || {}) };
   const [plans, setPlans] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -601,6 +607,36 @@ export default function GeneratedPlan({ form, onBack }) {
   const [backendCost, setBackendCost] = useState(null);
   const [backendMonths, setBackendMonths] = useState(null);
   const [backendAssumptions, setBackendAssumptions] = useState([]);
+
+  // Saved Plans Portfolio State
+  const [savedPlansList, setSavedPlansList] = useState([]);
+  const [savedPlanIds, setSavedPlanIds] = useState(new Set());
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveTitle, setSaveTitle] = useState("");
+  const [saveNotes, setSaveNotes] = useState("");
+  const [saveToast, setSaveToast] = useState(null);
+
+  const loadSavedPlans = useCallback(async () => {
+    try {
+      const res = await getSavedPlans();
+      if (res?.saved_plans) {
+        setSavedPlansList(res.saved_plans);
+        setSavedPlanIds(new Set(res.saved_plans.map((p) => p.plan_id)));
+      }
+    } catch (err) {
+      console.error("Failed to fetch saved plans:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSavedPlans();
+    const handleSavedUpdated = () => loadSavedPlans();
+    window.addEventListener("buildwise:saved-plans-updated", handleSavedUpdated);
+    return () => {
+      window.removeEventListener("buildwise:saved-plans-updated", handleSavedUpdated);
+    };
+  }, [loadSavedPlans]);
 
   const requestPlans = useCallback(async (nextSeed, append = false) => {
     if (append) setGenerating(true);
@@ -624,8 +660,15 @@ export default function GeneratedPlan({ form, onBack }) {
         let updated;
         let nextSelected;
         if (!append) {
-          updated = incoming;
-          nextSelected = 0;
+          if (initialPlan) {
+            const exists = incoming.some((p) => p.plan_id === initialPlan.plan_id);
+            updated = exists ? incoming : [initialPlan, ...incoming];
+            const initIdx = updated.findIndex((p) => p.plan_id === initialPlan.plan_id);
+            nextSelected = initIdx !== -1 ? initIdx : 0;
+          } else {
+            updated = incoming;
+            nextSelected = 0;
+          }
         } else {
           updated = [...previous];
           let firstNewIdx = -1;
@@ -744,6 +787,66 @@ export default function GeneratedPlan({ form, onBack }) {
   const cost = backendCost !== null ? backendCost : (builtUpArea > 0 ? builtUpArea * rate : 0);
   const months = backendMonths !== null ? backendMonths : (builtUpArea > 0 ? Math.max(3, Math.round(builtUpArea / 190)) : 0);
 
+  const currentPlanId = selectedPlan ? planId(selectedPlan, selectedIndex) : null;
+  const isCurrentPlanSaved = currentPlanId ? savedPlanIds.has(currentPlanId) : false;
+
+  const handleOpenSaveModal = () => {
+    if (!selectedPlan) return;
+    const existing = savedPlansList.find((p) => p.plan_id === currentPlanId);
+    if (existing) {
+      setSaveTitle(existing.title || planTitle(selectedPlan, selectedIndex));
+      setSaveNotes(existing.notes || "");
+    } else {
+      setSaveTitle(planTitle(selectedPlan, selectedIndex));
+      setSaveNotes("");
+    }
+    setShowSaveModal(true);
+  };
+
+  const handleSaveLikedPlan = async () => {
+    if (!selectedPlan || !currentPlanId) return;
+    setSaving(true);
+    try {
+      await saveLikedPlan({
+        planId: currentPlanId,
+        title: saveTitle || planTitle(selectedPlan, selectedIndex),
+        notes: saveNotes,
+        plan: selectedPlan,
+        form: data,
+        builtUpArea: builtUpArea,
+        estimatedCost: cost,
+        score: score,
+      });
+      await loadSavedPlans();
+      setShowSaveModal(false);
+      setSaveToast(`✓ "${saveTitle || planTitle(selectedPlan, selectedIndex)}" saved to your liked portfolio!`);
+      setTimeout(() => setSaveToast(null), 4000);
+      window.dispatchEvent(new CustomEvent("buildwise:saved-plans-updated"));
+    } catch (err) {
+      alert("Failed to save plan: " + (err.message || "Unknown error"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRemoveLikedPlan = async () => {
+    const existing = savedPlansList.find((p) => p.plan_id === currentPlanId);
+    if (!existing) return;
+    setSaving(true);
+    try {
+      await deleteSavedPlan(existing.id);
+      await loadSavedPlans();
+      setShowSaveModal(false);
+      setSaveToast("Plan removed from your liked portfolio.");
+      setTimeout(() => setSaveToast(null), 3000);
+      window.dispatchEvent(new CustomEvent("buildwise:saved-plans-updated"));
+    } catch (err) {
+      alert("Failed to remove saved plan: " + (err.message || "Unknown error"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <main className="generated-page">
@@ -804,13 +907,25 @@ export default function GeneratedPlan({ form, onBack }) {
           <h1>{title}</h1>
           <p>Review the generated room arrangement and compare available alternatives.</p>
         </div>
-        <button
-          className={`secondary-button ${compareMode ? "is-active" : ""}`}
-          onClick={() => setCompareMode((value) => !value)}
-          disabled={plans.length < 2}
-        >
-          <GitCompare size={16} /> {compareMode ? "Close comparison" : "Compare plans"}
-        </button>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            className={`secondary-button ${isCurrentPlanSaved ? "is-active" : ""}`}
+            onClick={handleOpenSaveModal}
+            style={isCurrentPlanSaved ? { borderColor: "#16a34a", color: "#16a34a", fontWeight: 600 } : {}}
+            title={isCurrentPlanSaved ? "Plan is saved to your portfolio" : "Save this plan to your portfolio"}
+          >
+            {isCurrentPlanSaved ? <Check size={16} /> : <Bookmark size={16} />}
+            {isCurrentPlanSaved ? "Saved to Liked Plans" : "Save Plan to Liked"}
+          </button>
+          <button
+            className={`secondary-button ${compareMode ? "is-active" : ""}`}
+            onClick={() => setCompareMode((value) => !value)}
+            disabled={plans.length < 2}
+          >
+            <GitCompare size={16} /> {compareMode ? "Close comparison" : "Compare plans"}
+          </button>
+        </div>
       </section>
 
       {error && <div className="inline-alert"><AlertCircle size={16} /> {error}</div>}
@@ -856,15 +971,18 @@ export default function GeneratedPlan({ form, onBack }) {
           <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-muted, #64748b)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Select Layout:</span>
           {plans.map((p, idx) => {
             const isSel = idx === selectedIndex;
+            const pid = planId(p, idx);
+            const isSaved = savedPlanIds.has(pid);
             return (
               <button
-                key={planId(p, idx)}
+                key={pid}
                 type="button"
                 className={isSel ? "primary-button" : "secondary-button"}
-                style={{ padding: "6px 14px", fontSize: "0.85rem", borderRadius: "20px", cursor: "pointer" }}
+                style={{ padding: "6px 14px", fontSize: "0.85rem", borderRadius: "20px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
                 onClick={() => setSelectedIndex(idx)}
               >
                 {isSel ? "✓ " : ""}{planTitle(p, idx)}
+                {isSaved && <Star size={12} fill="#eab308" color="#eab308" title="Saved to portfolio" />}
               </button>
             );
           })}
@@ -889,7 +1007,30 @@ export default function GeneratedPlan({ form, onBack }) {
                   <h2>{title}</h2>
                   <p>Room geometry returned by the generation engine</p>
                 </div>
-                {score !== null && <div className="score-pill"><span>MODEL SCORE</span><strong>{score.toFixed(1)}</strong></div>}
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <button
+                    type="button"
+                    className="outline-button"
+                    onClick={handleOpenSaveModal}
+                    style={{
+                      padding: "6px 14px",
+                      fontSize: "0.82rem",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      borderRadius: "20px",
+                      cursor: "pointer",
+                      border: isCurrentPlanSaved ? "1px solid #16a34a" : "1px solid var(--border-color, #94a3b8)",
+                      color: isCurrentPlanSaved ? "#16a34a" : "inherit",
+                      background: isCurrentPlanSaved ? "rgba(34, 197, 94, 0.1)" : "transparent",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {isCurrentPlanSaved ? <Check size={14} /> : <Bookmark size={14} />}
+                    {isCurrentPlanSaved ? "Saved to Liked" : "Save Plan to Liked"}
+                  </button>
+                  {score !== null && <div className="score-pill"><span>MODEL SCORE</span><strong>{score.toFixed(1)}</strong></div>}
+                </div>
               </div>
 
               <FloorPlan plan={selectedPlan} form={data} />
@@ -987,6 +1128,179 @@ export default function GeneratedPlan({ form, onBack }) {
         BuildWise creates preliminary planning layouts, not construction-ready architectural drawings.
         Verify room dimensions, setbacks, ventilation, structure and local regulations with a qualified professional.
       </footer>
+
+      {/* FLOATING SAVE CONFIRMATION TOAST */}
+      {saveToast && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "28px",
+            right: "28px",
+            background: "#16a34a",
+            color: "#ffffff",
+            padding: "12px 22px",
+            borderRadius: "10px",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+            zIndex: 1300,
+            fontSize: "0.9rem",
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          <Check size={18} />
+          <span>{saveToast}</span>
+        </div>
+      )}
+
+      {/* SAVE LIKED PLAN MODAL */}
+      {showSaveModal && selectedPlan && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.65)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1200,
+            padding: "20px",
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowSaveModal(false);
+          }}
+        >
+          <div
+            style={{
+              background: "var(--card-bg, #1e293b)",
+              color: "var(--text-color, #f8fafc)",
+              border: "1px solid var(--border-color, #334155)",
+              borderRadius: "16px",
+              padding: "26px",
+              maxWidth: "520px",
+              width: "100%",
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.35)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ background: "rgba(59, 130, 246, 0.15)", color: "var(--accent-color, #0284c7)", padding: "10px", borderRadius: "10px" }}>
+                  <Bookmark size={22} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 700 }}>
+                    {isCurrentPlanSaved ? "Update Liked Blueprint" : "Save Plan to Liked Portfolio"}
+                  </h3>
+                  <small style={{ color: "var(--text-muted, #94a3b8)", fontSize: "0.8rem" }}>
+                    Save this blueprint layout for future reference, comparisons and client reviews.
+                  </small>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSaveModal(false)}
+                style={{ background: "none", border: "none", color: "var(--text-muted, #94a3b8)", cursor: "pointer", fontSize: "1.2rem", padding: "4px" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* SPECS BADGE */}
+            <div style={{ background: "rgba(255, 255, 255, 0.04)", border: "1px solid var(--border-color, #334155)", borderRadius: "8px", padding: "12px", marginBottom: "16px", fontSize: "0.82rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                <span style={{ color: "var(--text-muted, #94a3b8)" }}>Dimensions & Layout:</span>
+                <strong>{dimensions.width} × {dimensions.depth} ft • {data.bedrooms} BHK ({String(data.facing).toUpperCase()} Facing)</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "var(--text-muted, #94a3b8)" }}>Built-up & Civil Est.:</span>
+                <strong>{builtUpArea} sq ft • ₹{(cost / 100000).toFixed(1)}L ({data.quality})</strong>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "6px" }}>
+                Plan Name / Custom Title
+              </label>
+              <input
+                type="text"
+                value={saveTitle}
+                onChange={(e) => setSaveTitle(e.target.value)}
+                placeholder="e.g. Master Suite Option A"
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--border-color, #334155)",
+                  background: "var(--input-bg, #0f172a)",
+                  color: "inherit",
+                  fontSize: "0.9rem",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "6px" }}>
+                Client Notes & Highlights (Optional)
+              </label>
+              <textarea
+                value={saveNotes}
+                onChange={(e) => setSaveNotes(e.target.value)}
+                rows={3}
+                placeholder="e.g. Liked ground-floor suite for parents, spacious east-facing kitchen, good car parking width..."
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--border-color, #334155)",
+                  background: "var(--input-bg, #0f172a)",
+                  color: "inherit",
+                  fontSize: "0.88rem",
+                  resize: "vertical",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
+              {isCurrentPlanSaved ? (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={handleRemoveLikedPlan}
+                  disabled={saving}
+                  style={{ color: "#ef4444", borderColor: "#ef4444", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                >
+                  <Trash2 size={15} /> Remove from Liked
+                </button>
+              ) : <span />}
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setShowSaveModal(false)}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={handleSaveLikedPlan}
+                  disabled={saving}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                >
+                  <Check size={16} />
+                  {saving ? "Saving..." : isCurrentPlanSaved ? "Update Plan" : "Save to Liked Plans"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

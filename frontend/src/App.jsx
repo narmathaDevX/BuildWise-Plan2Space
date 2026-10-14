@@ -46,7 +46,9 @@ function App() {
   const [projectVersion, setProjectVersion] = useState(0);
 
   const isUserAuthenticated = Boolean(
-    currentUser && currentUser.email && currentUser.email !== "guest@buildwise.local"
+    currentUser &&
+      currentUser.email &&
+      (localStorage.getItem("buildwise_token") || currentUser.email !== "guest@buildwise.local")
   );
 
   useEffect(() => {
@@ -107,13 +109,17 @@ function App() {
     },
   ];
 
+  const [initialPlanData, setInitialPlanData] = useState(null);
+
   const openDashboard = () => {
     setShowGeneratedPlan(false);
+    setInitialPlanData(null);
     setActivePage("Dashboard");
   };
 
   const openPlanner = () => {
     setShowGeneratedPlan(false);
+    setInitialPlanData(null);
     setActivePage("House Planner");
   };
 
@@ -126,6 +132,17 @@ function App() {
       return;
     }
     setGeneratedForm(form);
+    setInitialPlanData(null);
+    setShowGeneratedPlan(true);
+  };
+
+  const handleOpenSavedPlan = (savedPlan) => {
+    if (savedPlan.form) {
+      setGeneratedForm(savedPlan.form);
+    }
+    if (savedPlan.plan) {
+      setInitialPlanData(savedPlan.plan);
+    }
     setShowGeneratedPlan(true);
   };
 
@@ -191,7 +208,7 @@ function App() {
             )}
           </button>
 
-          {currentUser && currentUser.email !== "guest@buildwise.local" ? (
+          {isUserAuthenticated ? (
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <button
                 className="profile-circle"
@@ -285,6 +302,7 @@ function App() {
 
           <GeneratedPlan
             form={generatedForm}
+            initialPlan={initialPlanData}
             onBack={openPlanner}
           />
 
@@ -301,6 +319,7 @@ function App() {
           <HousePlanner
             onBack={openDashboard}
             onGenerate={generatePlan}
+            onOpenSavedPlan={handleOpenSavedPlan}
             isLoggedIn={isUserAuthenticated}
           />
 
