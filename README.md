@@ -4,6 +4,8 @@ BuildWise is a Python-backed house construction planning web application designe
 
 The system combines an existing minimalist React frontend with a pure-Python FastAPI backend, SQLite database persistence, an algorithmic floor-plan constraint solver, civil engineering cost/schedule simulation models, dynamic material estimation, and end-to-end integration.
 
+> 📖 **Full Architectural & Domain Guide:** For an exhaustive technical breakdown of every frontend page, backend microservice, civil engineering calculation engine, and database entity, consult [`docs/END_TO_END_FUNCTIONING.md`](docs/END_TO_END_FUNCTIONING.md).
+
 ---
 
 ## 1. System Overview
@@ -73,6 +75,7 @@ buildwise/
 │   └── vite.config.js
 │
 ├── docs/
+│   ├── END_TO_END_FUNCTIONING.md  # Comprehensive end-to-end system functioning & architectural guide
 │   ├── API_CONTRACT.md            # Comprehensive OpenAPI-aligned API specification
 │   ├── DATASET_AND_MODEL_DECISION.md # ML candidate audit & civil engineering formula decision
 │   ├── PROGRESS_CHECKLIST.md      # Phase-by-phase implementation log
