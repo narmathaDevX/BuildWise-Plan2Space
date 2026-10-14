@@ -9,13 +9,14 @@ The system combines an existing minimalist React frontend with a pure-Python Fas
 ## 1. System Overview
 
 ### Core Features
-- **House Planner (4 Steps):** Interactive dimensional configuration (length, width, orientation/facing, location, bedrooms, bathrooms, floors, parking, balcony, pooja, utility), with live server-side affordability analysis and parameter bounds validation.
-- **Algorithmic Floor-Plan Engine:** Pure-Python deterministic constraint-satisfaction solver that respects mandatory Tamil Nadu municipal setbacks (front: 5 ft, rear: 3 ft, sides: 3 ft), minimum room areas, attached-bathroom co-location, and generates stable plan IDs with fitness scoring.
+- **House Planner (4 Steps):** Interactive dimensional configuration (length, width, orientation/facing, location, bedrooms 1–8, bathrooms 1–6, floors 1–4, parking, balcony, pooja, utility), with live server-side affordability analysis and parameter bounds validation. Strictly gated behind authentication: unauthenticated users are prompted with an intuitive AuthModal, and plan generation automatically resumes upon login.
+- **Architectural Floor-Plan Engine & CAD Blueprint Rendering:** Algorithmic geometric constraint solver guaranteeing 100% room preservation (including all requested bathrooms up to 6, covered verandah sit-outs, and spacious kitchens), rendering AutoCAD-grade blueprints with double-line load-bearing walls, $90^\circ$ curved inward door swings, exterior ventilation windows, and authentic Tamil Nadu residential fixtures (beds, commodes, gas hobs, dining sets, car parking, balconies). Generates 4 distinct architectural archetypes on "Another plan".
 - **Cost Estimation Engine:** Engineering formula based on CPWD and Tamil Nadu PWD Schedule of Rates (SOR). Supports Economy, Standard, and Premium quality tiers, 10+ Tamil Nadu district location multipliers, and uses a largest-remainder rounding algorithm to guarantee that the 5 cost categories sum to exactly 100% of the total estimate.
-- **Schedule Simulation:** Month-by-month discrete cash-flow simulation across 7 sequential construction stages (Site Preparation, Foundation, Structure, Walls & Partitions, Electrical, Plumbing, Flooring & Finishing). Enforces predecessor dependency constraints, physical monthly burn capacity caps, and Northeast monsoon weather slowdown adjustments (October–November). Start dates are dynamically derived from the next calendar month.
-- **Materials Schedule:** Standard thumb-rule quantities per square foot for core materials (Cement, Steel, M-Sand, Bricks, Floor Tiles, Paint) with dated rate cards (October 2026). Includes one-click purchase status toggling and custom material additions.
-- **Project Reports & Dashboard:** Comprehensive project identity, 4-metric progress grid, 4-milestone status grid, budget utilization, and one-click printable report (`window.print()`).
-- **Authentication & Persistence:** Secure bcrypt password hashing and JWT authentication with an optional bypass (`AUTH_REQUIRED=false` by default) so the UI works seamlessly with a default local guest user.
+- **Schedule Simulation & Dynamic Site Checklist:** Month-by-month discrete cash-flow simulation across 7 sequential construction stages. Dynamically generates day-by-day site execution tasks ($months \times 25$ working days, e.g. Day 1 to 350) initialized completely unchecked (`completed: false`) for daily on-site physical tracking. Homeowners can manually edit tasks, reassign days, postpone tasks (+1 day), add custom items, or delete tasks.
+- **Global Reactive State Synchronization:** Switching or generating plans automatically fires global synchronization events, instantly re-aligning material bills of quantities, budget breakdowns, construction timeline, and statutory compliance across all tabs without page reloads.
+- **Materials Schedule & Regional Provenance:** Standard thumb-rule quantities with real-world Tamil Nadu PWD SOR 2025–2026 and BAI market rate provenance. Includes 5-zone district pricing multipliers, 7-trade daily wage schedules, custom material creation, and CSV dataset export.
+- **Project Reports & Dashboard:** Comprehensive project identity, 4-metric progress grid, 4-milestone status grid, budget utilization, institutional Bank Loan Dossier (SBI / HDFC 80% LTV), and one-click printable report (`window.print()`).
+- **Authentication & Persistence:** Secure bcrypt password hashing and JWT authentication supporting registration, login, and quick demo builder sign in.
 
 ---
 
@@ -190,29 +191,29 @@ Execute the complete test suite:
 - `test_cost.py`: Quality tier rate scaling, Tamil Nadu location index multipliers, exact 100% sum of the 5-category cost breakdown via largest-remainder rounding.
 - `test_schedule.py`: Discrete-event cash flow simulation, predecessor order verification, monthly burn rate capacity capping, and monotonicity.
 - `test_materials.py`: Thumb-rule calculation, numeric quantities, and purchase status updates.
-- `test_tasks.py`: Day-to-day site checklist operations, task completion toggles, and task postponement (+1 day).
+- `test_tasks.py`: Day-to-day site checklist operations, task completion toggles, task postponement (+1 day), manual editing, deletion, and regeneration.
 - `test_auth.py`: Bcrypt registration, login token generation, and `/api/auth/me` profile resolution.
 - `test_api.py`: FastAPI error handler returning single-string `detail` on 422 validation errors, project summary, month stepper, materials patching, custom material creation, and report endpoints.
-- **Result: 31 passed in 1.14s.**
+- **Result: 32 passed in 1.21s.**
 
 ### Building Frontend
 Verify that the production build completes without errors:
 ```bash
 cd /Users/narmathan/buildwise/frontend && npm run build
 ```
-Result: `vite v8.3.3 built client environment in ~200ms with 0 errors`.
+Result: `vite v8.3.3 built client environment in ~227ms with 0 errors`.
 
 ### Screenshot Verification
 Comprehensive visual verification screenshots are cataloged in `docs/screenshots/`:
 - `docs/screenshots/before/`: Baseline captures of all pages prior to code changes.
 - `docs/screenshots/after/`: Full end-to-end integration captures showing live data from the FastAPI backend and SQLite database.
-- `docs/screenshots/realworld_1_planner_compliance.png`: House Planner Step 4 showing TNCDBR 2019 statutory norms and pre-construction ancillary tip.
-- `docs/screenshots/realworld_2_generated_plan.png`: Floor plan with physical dimension callouts (`12'×17' • 202 sq ft`), Vastu compass rose (`N ↑`), TNCDBR compliance badge, and 5% retention estimate.
-- `docs/screenshots/realworld_3_construction_escrow.png`: Construction page Contractor Payment Escrow tab (8 milestone stages, 90-day retention reserve, and inspection gates).
-- `docs/screenshots/realworld_4_construction_quality.png`: Construction page On-Site Quality Protocols tab (5 non-engineer field inspection checks).
-- `docs/screenshots/realworld_5_materials_districts.png`: Materials page Tamil Nadu District Pricing & Daily Wage Rates selector bar.
-- `docs/screenshots/realworld_6_materials_wages_modal.png`: Official Tamil Nadu PWD Schedule of Rates (SOR) 2025–2026 Daily Labor Wage Schedule modal across all 5 districts.
-- `docs/screenshots/realworld_7_reports_bank_dossier.png`: Reports page Institutional Bank Loan & DTCP Sanction Ready Construction Project Dossier.
+- `docs/screenshots/after/verify_1_auth_gate_modal.png`: House Planner Step 4 showing contextual Auth Gate modal preventing unauthenticated plan generation.
+- `docs/screenshots/after/verify_2_architectural_floorplan_cad.png`: AutoCAD-grade architectural blueprint rendering with double-line load-bearing walls, $90^\circ$ curved inward door swings, exterior ventilation windows, and furniture fixture outlines.
+- `docs/screenshots/after/verify_3_architectural_plan_alternative.png`: Appending distinct architectural archetypes on "Another plan" (Split-Wing, Vastu, Great Room, Linear Breezeway).
+- `docs/screenshots/after/verify_4_construction_dynamic_days.png`: Construction page with dynamic 350-day schedule ($months \times 25$ days) and all tasks starting unchecked.
+- `docs/screenshots/after/verify_5_edit_task_modal.png`: Construction page manual Task Editor modal allowing on-site task customization, day re-assignment, and trade selection.
+- `docs/screenshots/after/verify_6_materials_synchronized.png`: Materials schedule automatically synchronized with active plan parameters.
+- `docs/screenshots/after/verify_7_reports_synchronized.png`: Project Report and Bank Loan Dossier automatically synchronized with the generated house plan.
 
 ---
 
@@ -246,8 +247,11 @@ Comprehensive visual verification screenshots are cataloged in `docs/screenshots
 | `PATCH`| `/api/projects/current/materials/{id}` | Toggle purchase status or edit quantity/rate |
 | `POST` | `/api/projects/current/materials` | Add custom material to the project schedule |
 | `DELETE`| `/api/projects/current/materials/{id}` | Delete custom material |
-| `GET` | `/api/projects/current/tasks` | Daily construction site task checklist (Days 1–40) |
+| `GET` | `/api/projects/current/tasks` | Daily construction site task checklist (dynamic duration) |
 | `PATCH`| `/api/projects/current/tasks/{id}` | Mark daily site task complete / incomplete |
+| `PUT`  | `/api/projects/current/tasks/{id}` | Manually edit site task (title, description, trade, day, stage) |
+| `DELETE`| `/api/projects/current/tasks/{id}` | Delete construction site task |
 | `POST` | `/api/projects/current/tasks/{id}/postpone` | Postpone task to the next construction day (+1 Day) |
 | `POST` | `/api/projects/current/tasks` | Create custom day task |
+| `POST` | `/api/projects/current/tasks/regenerate` | Re-sync checklist tasks with active plan schedule |
 | `GET` | `/api/projects/current/report` | Bank Loan & DTCP Sanction Ready Construction Project Dossier |

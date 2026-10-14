@@ -57,7 +57,7 @@ function getMaterialIcon(name, category) {
   return getCategoryIcon(category);
 }
 
-function Materials() {
+function Materials({ projectVersion }) {
   const [materials, setMaterials] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -136,6 +136,16 @@ function Materials() {
 
   useEffect(() => {
     loadMaterials();
+  }, [projectVersion]);
+
+  useEffect(() => {
+    const handleSync = () => {
+      loadMaterials();
+    };
+    window.addEventListener("buildwise:project-updated", handleSync);
+    return () => {
+      window.removeEventListener("buildwise:project-updated", handleSync);
+    };
   }, []);
 
   const handleTogglePurchased = async (material) => {

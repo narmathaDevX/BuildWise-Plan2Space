@@ -22,6 +22,11 @@ import {
   AlertTriangle,
   FileCheck,
   Layers3,
+  Pencil,
+  Trash2,
+  RotateCcw,
+  X,
+  Edit3,
 } from "lucide-react";
 import {
   getProjectConstruction,
@@ -29,6 +34,9 @@ import {
   updateProjectTask,
   postponeProjectTask,
   createProjectTask,
+  editProjectTask,
+  deleteProjectTask,
+  regenerateProjectTasks,
   getProjectMilestones,
 } from "../services/api";
 
@@ -42,7 +50,7 @@ const STAGE_ICONS = {
   finishing: Paintbrush,
 };
 
-function Construction() {
+function Construction({ projectVersion }) {
   const [month, setMonth] = useState(1);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -57,6 +65,17 @@ function Construction() {
   const [milestonesData, setMilestonesData] = useState(null);
   const [milestonesLoading, setMilestonesLoading] = useState(false);
 
+  // Task Editing Modal State
+  const [editingTask, setEditingTask] = useState(null);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    trade: "General Masonry",
+    day_number: 1,
+    stage_key: "foundation",
+    is_critical: false,
+  });
+
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -65,18 +84,19 @@ function Construction() {
     is_critical: false,
   });
 
-  useEffect(() => {
-    async function loadMilestones() {
-      try {
-        setMilestonesLoading(true);
-        const res = await getProjectMilestones();
-        if (res) setMilestonesData(res);
-      } catch (err) {
-        console.error("Failed to load milestones:", err);
-      } finally {
-        setMilestonesLoading(false);
-      }
+  const loadMilestones = async () => {
+    try {
+      setMilestonesLoading(true);
+      const res = await getProjectMilestones();
+      if (res) setMilestonesData(res);
+    } catch (err) {
+      console.error("Failed to load milestones:", err);
+    } finally {
+      setMilestonesLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadMilestones();
   }, []);
 
@@ -99,7 +119,20 @@ function Construction() {
 
   useEffect(() => {
     loadTasks(currentDay);
-  }, [currentDay]);
+  }, [currentDay, projectVersion]);
+
+  // Reactive cross-page sync
+  useEffect(() => {
+    const handleSync = () => {
+      loadTasks(currentDay);
+      getProjectConstruction(month).then(setData).catch(() => {});
+      loadMilestones();
+    };
+    window.addEventListener("buildwise:project-updated", handleSync);
+    return () => {
+      window.removeEventListener("buildwise:project-updated", handleSync);
+    };
+  }, [currentDay, month]);
 
   const handleToggleTask = async (task) => {
     const updatedStatus = !task.completed;
@@ -133,6 +166,67 @@ function Construction() {
     } catch (err) {
       console.error("Failed to postpone task:", err);
       alert("Unable to postpone task. Please try again.");
+      setTasksLoading(false);
+    }
+  };
+
+  const handleOpenEdit = (task) => {
+    setEditingTask(task);
+    setEditForm({
+      title: task.title,
+      description: task.description || "",
+      trade: task.trade || "General Masonry",
+      day_number: task.day_number || currentDay,
+      stage_key: task.stage_key || "foundation",
+      is_critical: Boolean(task.is_critical),
+    });
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    if (!editingTask || !editForm.title.trim()) return;
+    try {
+      setTaskSubmitting(true);
+      await editProjectTask(editingTask.id, {
+        title: editForm.title.trim(),
+        description: editForm.description.trim(),
+        trade: editForm.trade.trim(),
+        day_number: parseInt(editForm.day_number, 10),
+        stage_key: editForm.stage_key,
+        is_critical: editForm.is_critical,
+      });
+      setEditingTask(null);
+      await loadTasks(currentDay);
+    } catch (err) {
+      console.error("Failed to edit task:", err);
+      alert("Failed to update task.");
+    } finally {
+      setTaskSubmitting(false);
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    if (!window.confirm("Are you sure you want to delete this task from the checklist?")) return;
+    try {
+      setTasksLoading(true);
+      await deleteProjectTask(taskId);
+      await loadTasks(currentDay);
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+      alert("Failed to delete task.");
+      setTasksLoading(false);
+    }
+  };
+
+  const handleRegenerateSchedule = async () => {
+    if (!window.confirm("Regenerate day-by-day site tasks according to your active house plan duration?")) return;
+    try {
+      setTasksLoading(true);
+      await regenerateProjectTasks();
+      await loadTasks(currentDay);
+    } catch (err) {
+      console.error("Failed to regenerate schedule:", err);
+      alert("Failed to regenerate schedule.");
       setTasksLoading(false);
     }
   };
@@ -482,11 +576,30 @@ function Construction() {
               DAILY SITE EXECUTION CHECKLIST
             </span>
             <h2>
-              Day {activeDay} of {tasksData?.max_day || 40} Site Tasks
+              Day {activeDay} of {tasksData?.max_day || 250} Site Tasks
             </h2>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            {/* JUMP TO DAY INPUT */}
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--surface)", padding: "4px 8px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-soft)", fontWeight: 600 }}>GO TO:</span>
+              <input
+                type="number"
+                min={1}
+                max={tasksData?.max_day || 300}
+                value={currentDay}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  if (val >= 1 && val <= (tasksData?.max_day || 300)) {
+                    setCurrentDay(val);
+                  }
+                }}
+                style={{ width: "55px", padding: "3px 6px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--text)", borderRadius: "4px", fontSize: "12px", textAlign: "center" }}
+              />
+              <span style={{ fontSize: "0.75rem", color: "var(--text-soft)" }}>/ {tasksData?.max_day || 250}</span>
+            </div>
+
             <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--surface)", padding: "4px 8px", borderRadius: "8px", border: "1px solid var(--border)" }}>
               <button
                 type="button"
@@ -505,9 +618,9 @@ function Construction() {
                 type="button"
                 className="icon-button"
                 aria-label="Next day"
-                onClick={() => setCurrentDay(Math.min(tasksData?.max_day || 40, activeDay + 1))}
-                disabled={activeDay >= (tasksData?.max_day || 40)}
-                style={{ padding: "4px", background: "none", border: "none", cursor: activeDay >= (tasksData?.max_day || 40) ? "not-allowed" : "pointer", opacity: activeDay >= (tasksData?.max_day || 40) ? 0.3 : 1 }}
+                onClick={() => setCurrentDay(Math.min(tasksData?.max_day || 250, activeDay + 1))}
+                disabled={activeDay >= (tasksData?.max_day || 250)}
+                style={{ padding: "4px", background: "none", border: "none", cursor: activeDay >= (tasksData?.max_day || 250) ? "not-allowed" : "pointer", opacity: activeDay >= (tasksData?.max_day || 250) ? 0.3 : 1 }}
               >
                 <ChevronRight size={16} />
               </button>
@@ -522,7 +635,49 @@ function Construction() {
               <Plus size={15} />
               {showAddTask ? "Cancel" : "Add Site Task"}
             </button>
+
+            <button
+              type="button"
+              className="outline-button"
+              style={{ fontSize: "0.85rem", padding: "6px 12px" }}
+              onClick={handleRegenerateSchedule}
+              title="Reset tasks to match active house plan duration"
+            >
+              <RotateCcw size={14} />
+              Re-sync Plan
+            </button>
           </div>
+        </div>
+
+        {/* QUICK STAGE JUMP CHIPS */}
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "14px" }}>
+          {[
+            { label: "Site Prep (Day 1)", day: 1 },
+            { label: "Foundation (Day 20)", day: Math.min(tasksData?.max_day || 250, 20) },
+            { label: "Structure (Day 60)", day: Math.min(tasksData?.max_day || 250, 60) },
+            { label: "Walls & Lintel (Day 135)", day: Math.min(tasksData?.max_day || 250, 135) },
+            { label: "Services (Day 175)", day: Math.min(tasksData?.max_day || 250, 175) },
+            { label: "Finishing (Day 210)", day: Math.min(tasksData?.max_day || 250, 210) },
+            { label: "Handover", day: tasksData?.max_day || 250 },
+          ].map((chip) => (
+            <button
+              key={chip.label}
+              type="button"
+              onClick={() => setCurrentDay(chip.day)}
+              style={{
+                fontSize: "11px",
+                padding: "3px 8px",
+                borderRadius: "12px",
+                border: "1px solid var(--border)",
+                background: currentDay === chip.day ? "var(--accent)" : "var(--surface)",
+                color: currentDay === chip.day ? "#ffffff" : "var(--text-soft)",
+                cursor: "pointer",
+                fontWeight: currentDay === chip.day ? 700 : 500,
+              }}
+            >
+              {chip.label}
+            </button>
+          ))}
         </div>
 
         {/* DAY PROGRESS SUMMARY BANNER */}
@@ -667,8 +822,8 @@ function Construction() {
                   </div>
                 </div>
 
-                {/* POSTPONE BUTTON & STATUS */}
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                {/* TASK CONTROLS: POSTPONE, EDIT, DELETE */}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
                   {task.completed ? (
                     <span style={{ fontSize: "12px", color: "#22c55e", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
                       <CheckCircle2 size={14} /> Done
@@ -679,17 +834,178 @@ function Construction() {
                       className="outline-button"
                       onClick={() => handlePostponeTask(task)}
                       title="Postpone this work to the next construction day"
-                      style={{ fontSize: "12px", padding: "5px 10px", display: "flex", alignItems: "center", gap: "4px", cursor: "pointer" }}
+                      style={{ fontSize: "12px", padding: "5px 8px", display: "flex", alignItems: "center", gap: "4px", cursor: "pointer" }}
                     >
                       <FastForward size={13} />
-                      Postpone (+1 Day)
+                      Postpone (+1d)
                     </button>
                   )}
+
+                  <button
+                    type="button"
+                    className="outline-button"
+                    onClick={() => handleOpenEdit(task)}
+                    title="Edit task details, day or trade"
+                    style={{ fontSize: "12px", padding: "5px 8px", display: "flex", alignItems: "center", gap: "4px", cursor: "pointer" }}
+                  >
+                    <Pencil size={13} />
+                    Edit
+                  </button>
+
+                  <button
+                    type="button"
+                    className="outline-button"
+                    onClick={() => handleDeleteTask(task.id)}
+                    title="Delete task from checklist"
+                    style={{ fontSize: "12px", padding: "5px 8px", display: "flex", alignItems: "center", color: "#ef4444", cursor: "pointer" }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               </div>
             ))
           )}
         </div>
+
+        {/* EDIT TASK MODAL */}
+        {editingTask && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.65)",
+              backdropFilter: "blur(4px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999,
+              padding: "16px",
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setEditingTask(null);
+            }}
+          >
+            <div
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                maxWidth: "500px",
+                width: "100%",
+                padding: "24px",
+                borderRadius: "10px",
+                boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
+                position: "relative",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Edit3 size={18} color="var(--accent)" /> Edit Construction Task
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setEditingTask(null)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-soft)" }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEdit}>
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: 600, marginBottom: "4px" }}>
+                    Task Title
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.title}
+                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                    required
+                    style={{ width: "100%", padding: "8px 12px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--text)", borderRadius: "6px", fontSize: "13px" }}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: 600, marginBottom: "4px" }}>
+                      Assigned Day Number
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={tasksData?.max_day || 300}
+                      value={editForm.day_number}
+                      onChange={(e) => setEditForm({ ...editForm, day_number: e.target.value })}
+                      required
+                      style={{ width: "100%", padding: "8px 12px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--text)", borderRadius: "6px", fontSize: "13px" }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: 600, marginBottom: "4px" }}>
+                      Trade / Specialist
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.trade}
+                      onChange={(e) => setEditForm({ ...editForm, trade: e.target.value })}
+                      style={{ width: "100%", padding: "8px 12px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--text)", borderRadius: "6px", fontSize: "13px" }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: 600, marginBottom: "4px" }}>
+                    Construction Stage
+                  </label>
+                  <select
+                    value={editForm.stage_key}
+                    onChange={(e) => setEditForm({ ...editForm, stage_key: e.target.value })}
+                    style={{ width: "100%", padding: "8px 12px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--text)", borderRadius: "6px", fontSize: "13px" }}
+                  >
+                    <option value="site_prep">Site Preparation</option>
+                    <option value="foundation">Foundation</option>
+                    <option value="structure">Structure & Framing</option>
+                    <option value="walls">Walls & Partitions</option>
+                    <option value="electrical">Electrical Services</option>
+                    <option value="plumbing">Plumbing Services</option>
+                    <option value="finishing">Finishing & Painting</option>
+                  </select>
+                </div>
+
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: 600, marginBottom: "4px" }}>
+                    Work Instructions / Quality Notes
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={editForm.description}
+                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                    style={{ width: "100%", padding: "8px 12px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--text)", borderRadius: "6px", fontSize: "13px" }}
+                  />
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                  <button
+                    type="button"
+                    className="outline-button"
+                    onClick={() => setEditingTask(null)}
+                    style={{ padding: "8px 14px", fontSize: "13px" }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="primary-button"
+                    disabled={taskSubmitting}
+                    style={{ padding: "8px 16px", fontSize: "13px" }}
+                  >
+                    {taskSubmitting ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
           </>
         )}
 

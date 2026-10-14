@@ -207,6 +207,25 @@ export async function createProjectTask(task) {
   });
 }
 
+export async function editProjectTask(id, data) {
+  return request(`/api/projects/current/tasks/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteProjectTask(id) {
+  return request(`/api/projects/current/tasks/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function regenerateProjectTasks() {
+  return request("/api/projects/current/tasks/regenerate", {
+    method: "POST",
+  });
+}
+
 export async function loginUser(email, password) {
   const data = await request("/api/auth/login", {
     method: "POST",

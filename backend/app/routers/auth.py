@@ -17,13 +17,13 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 
 class RegisterRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str
     name: str = "Builder"
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 
 

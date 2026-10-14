@@ -55,5 +55,34 @@ def test_construction_tasks_endpoints():
     )
     assert create_res.status_code == 200
     created = create_res.json()
+    created_id = created["id"]
     assert created["title"] == "Sample test inspection by structural engineer"
     assert created["day_number"] == 5
+
+    # 5. Edit task (PUT)
+    edit_res = client.put(
+        f"/api/projects/current/tasks/{created_id}",
+        json={
+            "title": "Updated Engineer Inspection",
+            "description": "Updated notes on cover blocks",
+            "trade": "Lead Structural Consultant",
+            "day_number": 6,
+            "is_critical": False,
+        },
+    )
+    assert edit_res.status_code == 200
+    edited = edit_res.json()
+    assert edited["title"] == "Updated Engineer Inspection"
+    assert edited["trade"] == "Lead Structural Consultant"
+    assert edited["day_number"] == 6
+
+    # 6. Delete task (DELETE)
+    del_res = client.delete(f"/api/projects/current/tasks/{created_id}")
+    assert del_res.status_code == 200
+    assert del_res.json()["status"] == "deleted"
+
+    # 7. Regenerate tasks (POST /regenerate)
+    regen_res = client.post("/api/projects/current/tasks/regenerate")
+    assert regen_res.status_code == 200
+    assert regen_res.json()["status"] == "regenerated"
+    assert regen_res.json()["total_tasks"] >= 30

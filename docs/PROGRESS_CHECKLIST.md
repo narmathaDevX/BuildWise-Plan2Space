@@ -256,3 +256,50 @@ This checklist tracks the implementation of backend, database, cost/schedule/mat
     - `docs/screenshots/realworld_verified_vastu_plan_3baths.png` (Layout B: 3 baths, balcony, 190 sq ft kitchen)
     - `docs/screenshots/realworld_verified_another_plan_option.png` (Appended layout options on seed rotation)
 
+---
+
+## Phase 13: Dynamic Construction Checklist, State Synchronization, Auth Gate & Blueprint CAD
+- [x] **Auth Gate for Plan Generation (`AuthModal.jsx`, `App.jsx`, `HousePlanner.jsx`)**:
+  - Gated plan generation behind authentication.
+  - When logged out, clicking "Generate house plan" opens `AuthModal` displaying a clear contextual notice: *"Sign in or create an account to generate and save your architectural floor plan."*
+  - Enabled seamless auto-resumption: once logged in (or via Quick Demo Sign In), the pending plan generation immediately proceeds and renders the floor plan.
+  - Step 4 shows a clear lock indicator (`🔒 Sign in required to generate & save plan`) and dynamic button label ("Sign In & Generate Plan" vs "Generate house plan").
+- [x] **Dynamic Day-to-Day Construction Timeline & Fully Editable Checklist (`Construction.jsx`, `tasks.py`, `daily_tasks.py`)**:
+  - Dynamically calculates the total construction duration in working days from the active project's schedule ($estimated\_months \times 25$ days, e.g. Day 1 to Day 350 for a 14-month schedule).
+  - All tasks are initialized **unchecked** (`completed: false`) allowing homeowners to manually check off daily work as completed on-site.
+  - Full manual editing:
+    - Edit Task modal allows updating title, description, trade/specialist, assigned day number, and construction stage.
+    - Postpone task (+1 day) with counter increment.
+    - Add custom tasks for any day number.
+    - Delete unwanted tasks.
+    - "Re-sync Plan" button to re-align checklist with current plan duration.
+  - Stage jump chips (`Site Prep (Day 1)`, `Foundation (Day 20)`, `Structure (Day 60)`, `Walls & Lintel (Day 135)`, `Services (Day 175)`, `Finishing (Day 210)`, `Handover`) and direct `GO TO: [ input ] / N` navigation.
+- [x] **Global Reactive State Synchronization (`GeneratedPlan.jsx`, `App.jsx`, `Construction.jsx`, `Materials.jsx`, `Reports.jsx`, `projects.py`)**:
+  - Selecting or generating a new house plan dispatches a global `buildwise:project-updated` event.
+  - All dependent views (`Construction`, `Materials`, `Reports`, and `Dashboard`) re-fetch their data immediately upon plan selection or requirement changes.
+  - Automatically re-synchronizes construction duration, material bill of quantities, cost breakdown, and compliance certificates across all pages without requiring page reloads.
+- [x] **Architect-Grade Blueprint CAD Visuals & 100% Room Preservation (`GeneratedPlan.jsx`, `solver.py`)**:
+  - Double-line architectural wall boundaries ($9''$ exterior load-bearing walls, $4.5''$ interior partition walls).
+  - Authentic $90^\circ$ curved inward door swing arcs with jamb cutouts and swing trajectories.
+  - Architectural ventilation window symbols with glass panes on exterior walls.
+  - Precision architectural fixture outlines:
+    - King/queen beds with nightstands and pillow markers.
+    - Western commodes with cistern tanks, seats, and washbasins.
+    - L-shaped modular kitchen counters with 3-burner gas hobs and Franke sinks.
+    - 6-seater dining tables with chair placements.
+    - Living room sectionals with coffee tables.
+    - Car parking silhouette in the parking porch.
+    - Covered verandah sit-out with architectural deck planking.
+  - Guaranteed 100% preservation of all requested rooms (including 1–6 bathrooms and balcony/sit-out).
+- [x] **Comprehensive Testing & Verification**:
+  - 32 Pytest backend tests passing in `backend/tests/`.
+  - Frontend production build passing in 227ms (`npm run build`).
+  - Captured live browser verification screenshots in `docs/screenshots/after/`:
+    - `verify_1_auth_gate_modal.png` (Contextual auth gate on plan generation)
+    - `verify_2_architectural_floorplan_cad.png` (AutoCAD-grade blueprint layout with fixtures & door swings)
+    - `verify_3_architectural_plan_alternative.png` (Distinct appended architectural archetypes)
+    - `verify_4_construction_dynamic_days.png` (Dynamic 350-day schedule with unchecked tasks)
+    - `verify_5_edit_task_modal.png` (Full manual task editor modal)
+    - `verify_6_materials_synchronized.png` (Synchronized materials BOM)
+    - `verify_7_reports_synchronized.png` (Synchronized project report and bank dossier)
+

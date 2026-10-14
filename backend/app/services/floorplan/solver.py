@@ -496,6 +496,8 @@ class FloorPlanSolver:
             else:
                 raw_boxes = self._layout_archetype_3(W, D, r, jitter)
 
+            raw_boxes = self._ensure_all_rooms_placed(raw_boxes, r, W, D)
+
         # Convert normalized coordinates (u, v) into global plot envelope coordinates (x, y)
         placed_rooms: list[RectRoom] = []
         for rid, rname, rtype, u, v, w, h in raw_boxes:
@@ -932,6 +934,37 @@ class FloorPlanSolver:
             raw.append((r["kitchen"]["id"], "Linear Chef Kitchen", "kitchen", round(w_left + w_din, 2), y_rear, w_kit, h_rear))
         if r["utility"]:
             raw.append((r["utility"]["id"], "Service Utility", "utility", round(w_left + w_din + w_kit, 2), y_rear, w_util, h_rear))
+
+        return raw
+
+    def _ensure_all_rooms_placed(
+        self,
+        raw: list[tuple[str, str, str, float, float, float, float]],
+        r: dict[str, Any],
+        W: float,
+        D: float,
+    ) -> list[tuple[str, str, str, float, float, float, float]]:
+        placed_ids = {box[0] for box in raw}
+
+        # Ensure all requested bathrooms are placed
+        unplaced_baths = [b for b in r.get("other_baths", []) if b["id"] not in placed_ids]
+        if unplaced_baths:
+            wb = 5.5
+            hb = 7.0
+            for i, ub in enumerate(unplaced_baths):
+                ux = round(max(0.0, W - wb * (i + 1)), 2)
+                uy = round(max(0.0, D * 0.42), 2)
+                raw.append((ub["id"], ub.get("name") or f"Attached Bath {i+3}", "bathroom", ux, uy, wb, hb))
+
+        # Ensure all requested bedrooms are placed
+        unplaced_beds = [b for b in r.get("other_beds", []) if b["id"] not in placed_ids]
+        if unplaced_beds:
+            w_bed = round(min(14.0, max(10.0, W / (len(unplaced_beds) + 1))), 2)
+            h_bed = 11.0
+            for i, ubed in enumerate(unplaced_beds):
+                ux = round(i * w_bed, 2)
+                uy = round(max(0.0, D - h_bed), 2)
+                raw.append((ubed["id"], ubed.get("name") or f"Bedroom {i+3}", "bedroom", ux, uy, w_bed, h_bed))
 
         return raw
 

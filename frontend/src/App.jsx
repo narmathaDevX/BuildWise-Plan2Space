@@ -40,7 +40,14 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
+  const [authCustomNotice, setAuthCustomNotice] = useState(null);
+  const [pendingPlanForm, setPendingPlanForm] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [projectVersion, setProjectVersion] = useState(0);
+
+  const isUserAuthenticated = Boolean(
+    currentUser && currentUser.email && currentUser.email !== "guest@buildwise.local"
+  );
 
   useEffect(() => {
     async function checkAuth() {
@@ -54,6 +61,17 @@ function App() {
       }
     }
     checkAuth();
+  }, []);
+
+  // Global project update synchronization across all pages
+  useEffect(() => {
+    const handleProjectUpdate = () => {
+      setProjectVersion((prev) => prev + 1);
+    };
+    window.addEventListener("buildwise:project-updated", handleProjectUpdate);
+    return () => {
+      window.removeEventListener("buildwise:project-updated", handleProjectUpdate);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -100,6 +118,13 @@ function App() {
   };
 
   const generatePlan = (form) => {
+    if (!isUserAuthenticated) {
+      setPendingPlanForm(form);
+      setAuthCustomNotice("Sign in or create an account to generate and save your architectural floor plan.");
+      setAuthMode("login");
+      setAuthModalOpen(true);
+      return;
+    }
     setGeneratedForm(form);
     setShowGeneratedPlan(true);
   };
@@ -266,6 +291,8 @@ function App() {
         ) : activePage === "Dashboard" ? (
 
           <Dashboard
+            key={`dash-${projectVersion}`}
+            projectVersion={projectVersion}
             onStartPlanning={openPlanner}
           />
 
@@ -274,19 +301,29 @@ function App() {
           <HousePlanner
             onBack={openDashboard}
             onGenerate={generatePlan}
+            isLoggedIn={isUserAuthenticated}
           />
 
         ) : activePage === "Construction" ? (
 
-          <Construction />
+          <Construction
+            key={`const-${projectVersion}`}
+            projectVersion={projectVersion}
+          />
 
         ) : activePage === "Materials" ? (
 
-          <Materials />
+          <Materials
+            key={`mat-${projectVersion}`}
+            projectVersion={projectVersion}
+          />
 
         ) : activePage === "Reports" ? (
 
-          <Reports />
+          <Reports
+            key={`rep-${projectVersion}`}
+            projectVersion={projectVersion}
+          />
 
         ) : (
 
@@ -310,11 +347,21 @@ function App() {
 
       <AuthModal
         isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
+        onClose={() => {
+          setAuthModalOpen(false);
+          setAuthCustomNotice(null);
+        }}
         onAuthSuccess={(user) => {
           setCurrentUser(user);
+          if (pendingPlanForm) {
+            setGeneratedForm(pendingPlanForm);
+            setShowGeneratedPlan(true);
+            setPendingPlanForm(null);
+            setAuthCustomNotice(null);
+          }
         }}
         initialMode={authMode}
+        customNotice={authCustomNotice}
       />
 
     </div>
@@ -326,7 +373,7 @@ function App() {
    DASHBOARD
 ================================================================ */
 
-function Dashboard({ onStartPlanning }) {
+function Dashboard({ onStartPlanning, projectVersion }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -344,7 +391,7 @@ function Dashboard({ onStartPlanning }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [projectVersion]);
 
   return (
     <>

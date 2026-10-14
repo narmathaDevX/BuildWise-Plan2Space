@@ -153,6 +153,239 @@ function planScore(plan) {
   return Number.isFinite(score) ? score : null;
 }
 
+function renderArchitecturalFixtures(room, left, top, width, height) {
+  const type = String(room.raw?.type || "").toLowerCase();
+  const name = String(room.name || "").toLowerCase();
+
+  // 1. BEDROOMS
+  if (type.includes("bed") || name.includes("bed") || name.includes("suite")) {
+    const bedW = Math.min(width * 0.46, 11.5);
+    const bedH = Math.min(height * 0.50, 13.5);
+    const bedX = left + 1.2;
+    const bedY = top + 1.2;
+    const pillowW = bedW * 0.38;
+    const pillowH = bedH * 0.22;
+
+    return (
+      <g className="arch-fixture" opacity="0.45" stroke="var(--text-soft)" fill="none" strokeWidth="0.32">
+        <rect x={bedX} y={bedY} width={bedW} height={bedH} rx="0.5" fill="var(--surface-2, rgba(0,0,0,0.02))" />
+        <rect x={bedX + 0.3} y={bedY + 0.3} width={pillowW} height={pillowH} rx="0.3" />
+        <rect x={bedX + bedW - pillowW - 0.3} y={bedY + 0.3} width={pillowW} height={pillowH} rx="0.3" />
+        <line x1={bedX} y1={bedY + bedH * 0.45} x2={bedX + bedW} y2={bedY + bedH * 0.45} strokeDasharray="0.6 0.6" />
+        {height > 10 && (
+          <>
+            <rect x={bedX - 0.9} y={bedY} width="0.75" height="1.3" rx="0.2" />
+            <rect x={bedX + bedW + 0.15} y={bedY} width="0.75" height="1.3" rx="0.2" />
+          </>
+        )}
+      </g>
+    );
+  }
+
+  // 2. BATHROOMS
+  if (type.includes("bath") || name.includes("bath") || name.includes("toilet")) {
+    const ewcX = left + 1.2;
+    const ewcY = top + 1.2;
+    return (
+      <g className="arch-fixture" opacity="0.5" stroke="var(--text-soft)" fill="none" strokeWidth="0.32">
+        <rect x={ewcX} y={ewcY} width="2.2" height="0.9" rx="0.2" />
+        <ellipse cx={ewcX + 1.1} cy={ewcY + 1.8} rx="0.9" ry="1.1" />
+        {width > 6 && (
+          <g transform={`translate(${left + width - 2.6}, ${top + 1.2})`}>
+            <rect x="0" y="0" width="1.8" height="1.4" rx="0.3" />
+            <circle cx="0.9" cy="0.7" r="0.4" />
+          </g>
+        )}
+      </g>
+    );
+  }
+
+  // 3. KITCHEN
+  if (type === "kitchen" || name.includes("kitchen")) {
+    const slabDepth = Math.min(2.6, width * 0.28, height * 0.28);
+    return (
+      <g className="arch-fixture" opacity="0.45" stroke="var(--text-soft)" fill="none" strokeWidth="0.35">
+        <path
+          d={`M ${left} ${top + slabDepth} L ${left + width - slabDepth} ${top + slabDepth} L ${left + width - slabDepth} ${top + height}`}
+          stroke="var(--text-soft)"
+          strokeWidth="0.35"
+          strokeDasharray="0.8 0.4"
+        />
+        <g transform={`translate(${left + width * 0.25}, ${top + 0.4})`}>
+          <rect x="0" y="0" width="3.4" height="1.7" rx="0.2" stroke="var(--text-soft)" strokeWidth="0.3" />
+          <circle cx="0.8" cy="0.85" r="0.35" />
+          <circle cx="1.7" cy="0.85" r="0.45" />
+          <circle cx="2.6" cy="0.85" r="0.35" />
+        </g>
+        <g transform={`translate(${left + width - slabDepth + 0.3}, ${top + height * 0.4})`}>
+          <rect x="0" y="0" width="1.6" height="2.0" rx="0.2" stroke="var(--text-soft)" strokeWidth="0.3" />
+          <circle cx="0.8" cy="1.0" r="0.2" />
+        </g>
+      </g>
+    );
+  }
+
+  // 4. DINING
+  if (type === "dining" || name.includes("dining")) {
+    const tblW = Math.min(width * 0.45, 7.5);
+    const tblH = Math.min(height * 0.50, 9.5);
+    const tblX = left + (width - tblW) / 2;
+    const tblY = top + (height - tblH) / 2;
+
+    return (
+      <g className="arch-fixture" opacity="0.4" stroke="var(--text-soft)" fill="none" strokeWidth="0.32">
+        <rect x={tblX} y={tblY} width={tblW} height={tblH} rx="0.6" fill="var(--surface-2, rgba(0,0,0,0.02))" />
+        <rect x={tblX - 0.65} y={tblY + tblH * 0.2} width="0.55" height="1.3" rx="0.2" />
+        <rect x={tblX - 0.65} y={tblY + tblH * 0.6} width="0.55" height="1.3" rx="0.2" />
+        <rect x={tblX + tblW + 0.1} y={tblY + tblH * 0.2} width="0.55" height="1.3" rx="0.2" />
+        <rect x={tblX + tblW + 0.1} y={tblY + tblH * 0.6} width="0.55" height="1.3" rx="0.2" />
+      </g>
+    );
+  }
+
+  // 5. LIVING ROOM
+  if (type === "living" || name.includes("living") || name.includes("lounge")) {
+    const sofaW = Math.min(width * 0.52, 11);
+    const sofaH = Math.min(height * 0.24, 3.8);
+    const sofaX = left + 1.4;
+    const sofaY = top + 1.4;
+
+    return (
+      <g className="arch-fixture" opacity="0.4" stroke="var(--text-soft)" fill="none" strokeWidth="0.32">
+        <rect x={sofaX} y={sofaY} width={sofaW} height={sofaH} rx="0.5" fill="var(--surface-2, rgba(0,0,0,0.02))" />
+        <line x1={sofaX + sofaW * 0.33} y1={sofaY} x2={sofaX + sofaW * 0.33} y2={sofaY + sofaH} strokeDasharray="0.4 0.4" />
+        <line x1={sofaX + sofaW * 0.66} y1={sofaY} x2={sofaX + sofaW * 0.66} y2={sofaY + sofaH} strokeDasharray="0.4 0.4" />
+        <rect x={sofaX + sofaW * 0.2} y={sofaY + sofaH + 0.8} width={sofaW * 0.6} height="1.6" rx="0.3" strokeDasharray="0.6 0.3" />
+      </g>
+    );
+  }
+
+  // 6. CAR PARKING
+  if (type === "parking" || name.includes("parking") || name.includes("porch")) {
+    const carW = Math.min(width * 0.65, 8.0);
+    const carH = Math.min(height * 0.72, 16);
+    const carX = left + (width - carW) / 2;
+    const carY = top + (height - carH) / 2;
+
+    return (
+      <g className="arch-fixture" opacity="0.4" stroke="var(--text-soft)" fill="none" strokeWidth="0.35">
+        <rect x={carX} y={carY} width={carW} height={carH} rx="1.6" />
+        <path d={`M ${carX + 0.7} ${carY + carH * 0.26} Q ${carX + carW / 2} ${carY + carH * 0.22} ${carX + carW - 0.7} ${carY + carH * 0.26}`} />
+        <path d={`M ${carX + 0.7} ${carY + carH * 0.74} Q ${carX + carW / 2} ${carY + carH * 0.78} ${carX + carW - 0.7} ${carY + carH * 0.74}`} />
+        <rect x={carX + 0.7} y={carY + carH * 0.30} width={carW - 1.4} height={carH * 0.38} rx="0.5" strokeDasharray="0.5 0.3" />
+      </g>
+    );
+  }
+
+  // 7. POOJA
+  if (type === "pooja" || name.includes("pooja")) {
+    const altarW = width * 0.6;
+    return (
+      <g className="arch-fixture" opacity="0.55" stroke="#d97706" fill="none" strokeWidth="0.32">
+        <rect x={left + (width - altarW) / 2} y={top + 0.5} width={altarW} height="1.3" rx="0.2" fill="rgba(217, 119, 6, 0.08)" />
+        <circle cx={left + width / 2} cy={top + 2.5} r="0.7" stroke="#d97706" />
+        <circle cx={left + width / 2} cy={top + 2.5} r="0.25" fill="#d97706" />
+      </g>
+    );
+  }
+
+  // 8. BALCONY
+  if (type === "balcony" || name.includes("balcony") || name.includes("sit-out")) {
+    return (
+      <g className="arch-fixture" opacity="0.38" stroke="var(--text-soft)" strokeWidth="0.3">
+        <line x1={left} y1={top + 0.4} x2={left + width} y2={top + 0.4} strokeDasharray="0.6 0.6" />
+        <line x1={left} y1={top + 0.8} x2={left + width} y2={top + 0.8} />
+      </g>
+    );
+  }
+
+  return null;
+}
+
+function renderArchitecturalDoor(room, left, top, bottom, right, width, height) {
+  const type = String(room.raw?.type || "").toLowerCase();
+  const name = String(room.name || "").toLowerCase();
+  if (type === "parking" || type === "balcony" || name.includes("sit-out")) return null;
+
+  const R = Math.min(3.0, Math.max(2.2, width * 0.20, height * 0.20));
+  const px = left + 0.35;
+  const py = bottom - 0.35;
+
+  return (
+    <g className="arch-door" opacity="0.75">
+      <rect x={px - 0.25} y={py - 0.25} width="0.5" height="0.5" fill="var(--text)" />
+      <line x1={px} y1={py} x2={px} y2={py - R} stroke="var(--accent)" strokeWidth="0.45" />
+      <path
+        d={`M ${px} ${py - R} A ${R} ${R} 0 0 1 ${px + R} ${py}`}
+        fill="none"
+        stroke="var(--accent)"
+        strokeWidth="0.35"
+        strokeDasharray="0.5 0.4"
+      />
+    </g>
+  );
+}
+
+function renderArchitecturalWindows(room, left, top, bottom, right, width, height, minX, minY, maxX, maxY) {
+  const type = String(room.raw?.type || "").toLowerCase();
+  if (type === "parking" || type === "balcony") return null;
+
+  const raw = room.raw || {};
+  const rx = num(raw.x, 0);
+  const ry = num(raw.y, 0);
+  const rw = num(raw.width, 0);
+  const rh = num(raw.height, 0);
+
+  const windows = [];
+
+  // Top outer wall
+  if (Math.abs(ry - minY) < 0.6 && width > 6) {
+    const winW = Math.min(width * 0.48, 5.5);
+    const winX = left + (width - winW) / 2;
+    windows.push(
+      <g key="win-top" className="arch-window" opacity="0.8">
+        <rect x={winX} y={top - 0.35} width={winW} height="0.7" fill="var(--surface)" stroke="var(--text)" strokeWidth="0.35" />
+        <line x1={winX} y1={top} x2={winX + winW} y2={top} stroke="#0ea5e9" strokeWidth="0.35" />
+      </g>
+    );
+  }
+  // Bottom outer wall
+  if (Math.abs(ry + rh - maxY) < 0.6 && width > 6) {
+    const winW = Math.min(width * 0.48, 5.5);
+    const winX = left + (width - winW) / 2;
+    windows.push(
+      <g key="win-bot" className="arch-window" opacity="0.8">
+        <rect x={winX} y={bottom - 0.35} width={winW} height="0.7" fill="var(--surface)" stroke="var(--text)" strokeWidth="0.35" />
+        <line x1={winX} y1={bottom} x2={winX + winW} y2={bottom} stroke="#0ea5e9" strokeWidth="0.35" />
+      </g>
+    );
+  }
+  // Left outer wall
+  if (Math.abs(rx - minX) < 0.6 && height > 6) {
+    const winH = Math.min(height * 0.48, 5.5);
+    const winY = top + (height - winH) / 2;
+    windows.push(
+      <g key="win-left" className="arch-window" opacity="0.8">
+        <rect x={left - 0.35} y={winY} width="0.7" height={winH} fill="var(--surface)" stroke="var(--text)" strokeWidth="0.35" />
+        <line x1={left} y1={winY} x2={left} y2={winY + winH} stroke="#0ea5e9" strokeWidth="0.35" />
+      </g>
+    );
+  }
+  // Right outer wall
+  if (Math.abs(rx + rw - maxX) < 0.6 && height > 6) {
+    const winH = Math.min(height * 0.48, 5.5);
+    const winY = top + (height - winH) / 2;
+    windows.push(
+      <g key="win-right" className="arch-window" opacity="0.8">
+        <rect x={right - 0.35} y={winY} width="0.7" height={winH} fill="var(--surface)" stroke="var(--text)" strokeWidth="0.35" />
+        <line x1={right} y1={winY} x2={right} y2={winY + winH} stroke="#0ea5e9" strokeWidth="0.35" />
+      </g>
+    );
+  }
+
+  return windows;
+}
+
 function FloorPlan({ plan, form, compact = false }) {
   const rooms = getRooms(plan)
     .map((room, index) => ({
@@ -293,6 +526,15 @@ function FloorPlan({ plan, form, compact = false }) {
                 className={`room-shape ${index % 2 ? "room-shape--alt" : ""}`}
               />
 
+              {/* ARCHITECTURAL FIXTURES (BEDS, EWC, KITCHEN SLAB, SOFA, CAR) */}
+              {!compact && width > 5 && height > 5 && renderArchitecturalFixtures(room, left, top, width, height)}
+
+              {/* ARCHITECTURAL DOOR OPENING & SWING */}
+              {!compact && width > 4 && height > 4 && renderArchitecturalDoor(room, left, top, bottom, right, width, height)}
+
+              {/* ARCHITECTURAL VENTILATION WINDOWS */}
+              {!compact && renderArchitecturalWindows(room, left, top, bottom, right, width, height, minX, minY, maxX, maxY)}
+
               <text
                 x={centerX}
                 y={firstY}
@@ -333,7 +575,13 @@ function FloorPlan({ plan, form, compact = false }) {
 
       {!compact && (
         <div className="plan-legend">
-          <span><i className="legend-wall" /> Room boundaries & dimensions</span>
+          <span><i className="legend-wall" /> Structural walls & dimensions</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#0ea5e9" }} /> Ventilation windows
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent)" }} /> 90° Door swings
+          </span>
           <span style={{ color: "#16a34a" }}>✓ TNCDBR 2019 Rule 35: Setbacks & Max 70% Ground Coverage verified</span>
         </div>
       )}
@@ -396,7 +644,15 @@ export default function GeneratedPlan({ form, onBack }) {
           form: data,
           plans: updated,
           selected_plan_id: planId(updated[nextSelected], nextSelected),
-        }).catch(() => {});
+        })
+          .then(() => {
+            window.dispatchEvent(
+              new CustomEvent("buildwise:project-updated", {
+                detail: { plan_id: planId(updated[nextSelected], nextSelected) },
+              })
+            );
+          })
+          .catch(() => {});
 
         return updated;
       });
@@ -432,7 +688,15 @@ export default function GeneratedPlan({ form, onBack }) {
     if (!selectedPlan) return;
     let active = true;
     const curId = planId(selectedPlan, selectedIndex);
-    selectProjectPlan(curId).catch(() => {});
+    selectProjectPlan(curId)
+      .then(() => {
+        window.dispatchEvent(
+          new CustomEvent("buildwise:project-updated", {
+            detail: { plan_id: curId },
+          })
+        );
+      })
+      .catch(() => {});
 
     const totalBuiltUp = num(first(
       selectedPlan?.details?.total_built_up,

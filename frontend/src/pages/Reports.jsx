@@ -21,26 +21,37 @@ function formatCurrency(value) {
   return `₹${Math.round(value || 0).toLocaleString("en-IN")}`;
 }
 
-function Reports() {
+function Reports({ projectVersion }) {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function fetchReport() {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getProjectReport();
-        setReport(data);
-      } catch (err) {
-        console.error("Failed to load project report:", err);
-        setError("Unable to load project report from server.");
-      } finally {
-        setLoading(false);
-      }
+  const fetchReport = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getProjectReport();
+      setReport(data);
+    } catch (err) {
+      console.error("Failed to load project report:", err);
+      setError("Unable to load project report from server.");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchReport();
+  }, [projectVersion]);
+
+  useEffect(() => {
+    const handleSync = () => {
+      fetchReport();
+    };
+    window.addEventListener("buildwise:project-updated", handleSync);
+    return () => {
+      window.removeEventListener("buildwise:project-updated", handleSync);
+    };
   }, []);
 
   if (loading) {

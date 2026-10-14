@@ -2,7 +2,13 @@ import { useState } from "react";
 import { X, Lock, Mail, User as UserIcon, LogIn, UserPlus, CheckCircle2, AlertCircle } from "lucide-react";
 import { loginUser, registerUser } from "../services/api";
 
-export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode = "login" }) {
+export default function AuthModal({
+  isOpen,
+  onClose,
+  onAuthSuccess,
+  initialMode = "login",
+  customNotice = null,
+}) {
   const [mode, setMode] = useState(initialMode); // 'login' | 'register'
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -142,6 +148,27 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
               ? "Sign in to access your projects, estimates & floor plans"
               : "Register to manage construction milestones & material schedules"}
           </p>
+          {customNotice && (
+            <div
+              style={{
+                marginTop: "12px",
+                padding: "10px 12px",
+                background: "rgba(22, 163, 74, 0.1)",
+                border: "1px solid rgba(22, 163, 74, 0.25)",
+                borderRadius: "6px",
+                color: "var(--text)",
+                fontSize: "12px",
+                lineHeight: "1.4",
+                textAlign: "left",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <CheckCircle2 size={16} color="#16a34a" style={{ flexShrink: 0 }} />
+              <span>{customNotice}</span>
+            </div>
+          )}
         </div>
 
         {/* Tab Toggle */}

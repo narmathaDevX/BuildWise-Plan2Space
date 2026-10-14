@@ -7,17 +7,27 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from backend.app.db.models import ConstructionTask, Project, User
+from backend.app.db.models import ConstructionTask, Estimate, PlanModel, Project, User
 from backend.app.db.session import get_db
 from backend.app.routers.auth import get_current_user
 from backend.app.routers.projects import get_current_project
-from backend.app.services.daily_tasks import generate_default_daily_tasks
+from backend.app.services.daily_tasks import generate_dynamic_daily_tasks
 
 router = APIRouter(prefix="/api/projects/current/tasks", tags=["construction-tasks"])
 
 
 class TaskUpdatePayload(BaseModel):
     completed: bool
+
+
+class TaskEditPayload(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    day_number: int | None = None
+    stage_key: str | None = None
+    trade: str | None = None
+    is_critical: bool | None = None
+    completed: bool | None = None
 
 
 class TaskCreatePayload(BaseModel):
@@ -29,15 +39,40 @@ class TaskCreatePayload(BaseModel):
     is_critical: bool = False
 
 
-def ensure_project_tasks(project: Project, db: Session) -> list[ConstructionTask]:
+def ensure_project_tasks(project: Project, db: Session, force_regenerate: bool = False) -> list[ConstructionTask]:
     tasks = (
         db.query(ConstructionTask)
         .filter(ConstructionTask.project_id == project.id)
         .order_by(ConstructionTask.day_number, ConstructionTask.created_at)
         .all()
     )
-    if not tasks:
-        templates = generate_default_daily_tasks()
+    if not tasks or force_regenerate:
+        if force_regenerate:
+            db.query(ConstructionTask).filter(ConstructionTask.project_id == project.id).delete()
+            db.commit()
+
+        est = (
+            db.query(Estimate)
+            .filter(Estimate.project_id == project.id)
+            .order_by(Estimate.created_at.desc())
+            .first()
+        )
+        sched = est.get_schedule() if est else {}
+        months = sched.get("estimated_months") or 10
+        total_days = max(30, int(round(months * 25)))
+
+        form = project.get_form()
+        floors = int(form.get("floors", 1))
+        plan_m = (
+            db.query(PlanModel)
+            .filter(PlanModel.project_id == project.id, PlanModel.plan_id == project.selected_plan_id)
+            .first()
+            if project.selected_plan_id
+            else None
+        )
+        built_up = float(plan_m.get_plan_data().get("details", {}).get("total_built_up") or 1850) if plan_m else 1850.0
+
+        templates = generate_dynamic_daily_tasks(total_days=total_days, built_up_area=built_up, floors=floors)
         new_tasks = []
         for t in templates:
             ct = ConstructionTask(
@@ -46,8 +81,8 @@ def ensure_project_tasks(project: Project, db: Session) -> list[ConstructionTask
                 day_number=t["day_number"],
                 title=t["title"],
                 description=t.get("description", ""),
-                trade=t.get("trade", "General"),
-                completed=t.get("completed", False),
+                trade=t.get("trade", "General Masonry"),
+                completed=False,
                 is_critical=t.get("is_critical", False),
                 postponed_count=0,
             )
@@ -273,3 +308,92 @@ def create_custom_task(
         "completed": False,
         "postponed_count": 0,
     }
+
+
+@router.put("/{task_id}")
+def edit_task(
+    task_id: str,
+    payload: TaskEditPayload,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    project = get_current_project(current_user, db)
+    if not project:
+        raise HTTPException(status_code=404, detail="No active project found.")
+
+    task = (
+        db.query(ConstructionTask)
+        .filter(ConstructionTask.id == task_id, ConstructionTask.project_id == project.id)
+        .first()
+    )
+    if not task:
+        raise HTTPException(status_code=404, detail="Construction task not found.")
+
+    if payload.title is not None and payload.title.strip():
+        task.title = payload.title.strip()
+    if payload.description is not None:
+        task.description = payload.description.strip()
+    if payload.trade is not None and payload.trade.strip():
+        task.trade = payload.trade.strip()
+    if payload.day_number is not None and payload.day_number >= 1:
+        task.day_number = payload.day_number
+    if payload.stage_key is not None and payload.stage_key.strip():
+        task.stage_key = payload.stage_key.strip()
+    if payload.is_critical is not None:
+        task.is_critical = payload.is_critical
+    if payload.completed is not None:
+        task.completed = payload.completed
+        task.completed_at = datetime.now(timezone.utc) if payload.completed else None
+
+    db.commit()
+    db.refresh(task)
+
+    return {
+        "id": task.id,
+        "day_number": task.day_number,
+        "stage_key": task.stage_key,
+        "title": task.title,
+        "description": task.description,
+        "trade": task.trade,
+        "completed": bool(task.completed),
+        "is_critical": bool(task.is_critical),
+        "postponed_count": task.postponed_count,
+        "status": "updated",
+    }
+
+
+@router.delete("/{task_id}")
+def delete_task(
+    task_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    project = get_current_project(current_user, db)
+    if not project:
+        raise HTTPException(status_code=404, detail="No active project found.")
+
+    task = (
+        db.query(ConstructionTask)
+        .filter(ConstructionTask.id == task_id, ConstructionTask.project_id == project.id)
+        .first()
+    )
+    if not task:
+        raise HTTPException(status_code=404, detail="Construction task not found.")
+
+    db.delete(task)
+    db.commit()
+
+    return {"status": "deleted", "id": task_id}
+
+
+@router.post("/regenerate")
+def regenerate_tasks(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    project = get_current_project(current_user, db)
+    if not project:
+        raise HTTPException(status_code=404, detail="No active project found.")
+
+    tasks = ensure_project_tasks(project, db, force_regenerate=True)
+    return {"status": "regenerated", "total_tasks": len(tasks)}

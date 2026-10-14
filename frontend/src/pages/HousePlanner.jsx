@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { estimateAffordability } from "../services/api";
 
-function HousePlanner({ onBack, onGenerate }) {
+function HousePlanner({ onBack, onGenerate, isLoggedIn = false }) {
   const [step, setStep] = useState(1);
 
   const [form, setForm] = useState({
@@ -225,13 +225,20 @@ function HousePlanner({ onBack, onGenerate }) {
                 <ArrowRight size={16} />
               </button>
             ) : (
-              <button
-                className="primary-button generate-button"
-                onClick={() => onGenerate(form)}
-              >
-                <Sparkles size={16} />
-                Generate house plan
-              </button>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
+                {!isLoggedIn && (
+                  <span style={{ fontSize: "12px", color: "var(--text-soft)", display: "flex", alignItems: "center", gap: "4px" }}>
+                    🔒 Sign in required to generate & save plan
+                  </span>
+                )}
+                <button
+                  className="primary-button generate-button"
+                  onClick={() => onGenerate(form)}
+                >
+                  <Sparkles size={16} />
+                  {isLoggedIn ? "Generate house plan" : "Sign In & Generate Plan"}
+                </button>
+              </div>
             )}
 
           </div>

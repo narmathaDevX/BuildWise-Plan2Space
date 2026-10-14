@@ -222,6 +222,14 @@ def save_current_project(
         db.add(new_mat)
 
     db.commit()
+
+    # Re-sync daily site checklist tasks with the new built-up area and duration
+    try:
+        from backend.app.routers.tasks import ensure_project_tasks
+        ensure_project_tasks(project, db, force_regenerate=True)
+    except Exception as exc:
+        print(f"Warning: failed to re-sync tasks: {exc}")
+
     return get_current_project_detail(current_user, db)
 
 
@@ -302,6 +310,14 @@ def select_plan(
         db.add(m)
 
     db.commit()
+
+    # Re-sync daily site checklist tasks with the selected plan's duration
+    try:
+        from backend.app.routers.tasks import ensure_project_tasks
+        ensure_project_tasks(project, db, force_regenerate=True)
+    except Exception as exc:
+        print(f"Warning: failed to re-sync tasks: {exc}")
+
     return {"status": "updated", "selected_plan_id": payload.plan_id}
 
 
