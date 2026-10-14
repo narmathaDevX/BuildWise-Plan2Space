@@ -169,3 +169,59 @@ def test_architectural_archetypes_distinct_layouts():
     for p in res1["plans"] + res2["plans"]:
         assert any(keyword in p["name"] for keyword in ["Vastu", "Great-Room", "Generational", "Breezeway"])
 
+
+def test_user_reported_floorplan_requirements_3baths_balcony_kitchen():
+    """Verify that when user requests 3 bathrooms and balcony on a 1-floor plan:
+
+    1. Exactly 3 bathrooms are placed in every plan (none dropped).
+    2. Balcony (Front Balcony / Sit-Out) is placed on Floor 0.
+    3. Kitchen is spacious and practical (> 120 sq ft).
+    4. Bathrooms have realistic dimensions (width & height <= 10 ft).
+    """
+    req = {
+        "units": "ft",
+        "plot": {"width": 50.0, "depth": 60.0},
+        "road_side": "N",
+        "setbacks": {"front": 5.0, "rear": 3.0, "left": 3.0, "right": 3.0},
+        "floors": 1,
+        "rooms": [
+            {"id": "living", "type": "living", "min_area": 120},
+            {"id": "kitchen", "type": "kitchen", "min_area": 50},
+            {"id": "dining", "type": "dining", "min_area": 70},
+            {"id": "master", "type": "master_bedroom", "min_area": 120},
+            {"id": "master_bath", "type": "attached_bathroom", "min_area": 30, "attached_to": "master"},
+            {"id": "bedroom_2", "type": "bedroom", "min_area": 100},
+            {"id": "bedroom_3", "type": "bedroom", "min_area": 100},
+            {"id": "bathroom_1", "type": "bathroom", "min_area": 30},
+            {"id": "bathroom_2", "type": "bathroom", "min_area": 30},
+            {"id": "parking", "type": "parking", "min_area": 150},
+            {"id": "balcony", "type": "balcony", "min_area": 50},
+            {"id": "utility", "type": "utility", "min_area": 30},
+        ],
+        "solver_options": {"num_alternatives": 3, "seed": 42},
+    }
+
+    solver = FloorPlanSolver(req, {"seed": 42})
+    res = solver.solve()
+    assert len(res["plans"]) == 3
+
+    for plan in res["plans"]:
+        floor0_rooms = plan["floors"][0]["rooms"]
+        room_types = [r["type"] for r in floor0_rooms]
+
+        # 1. Exactly 3 bathrooms must be present
+        bathrooms = [r for r in floor0_rooms if "bath" in r["type"]]
+        assert len(bathrooms) == 3, f"Expected 3 bathrooms in {plan['name']}, got {len(bathrooms)}"
+
+        # 2. Balcony must be present on Floor 0
+        balconies = [r for r in floor0_rooms if r["type"] == "balcony"]
+        assert len(balconies) >= 1, f"Expected balcony in {plan['name']}, got {len(balconies)}"
+
+        # 3. Kitchen must be practical and spacious (> 120 sq ft)
+        kitchen = next(r for r in floor0_rooms if r["type"] == "kitchen")
+        assert kitchen["area"] >= 120.0, f"Kitchen in {plan['name']} was too small: {kitchen['area']} sq ft"
+
+        # 4. Bathrooms must NOT be bowling alleys (dimensions <= 10 ft)
+        for b in bathrooms:
+            assert b["width"] <= 10.0 and b["height"] <= 10.0, f"Bathroom {b['name']} in {plan['name']} had unrealistic dimension: {b['width']}x{b['height']}"
+

@@ -227,3 +227,32 @@ This checklist tracks the implementation of backend, database, cost/schedule/mat
     - `realworld_6_materials_wages_modal.png`
     - `realworld_7_reports_bank_dossier.png`
 
+---
+
+## Phase 12: Professional Architectural Floor-Plan Engine & Spatial Balance
+- [x] **100% Bathroom & Room Preservation Engine (`solver.py`)**:
+  - Fixed room extraction and mapping to guarantee that EVERY requested bathroom is assigned and rendered (support for 1 to 6 bathrooms).
+  - Explicitly mapped `master_bath` (Ensuite Master), `bath_bed2` (Ensuite Bath 2 / Senior Ensuite), `common_bath` (Common Bathroom), and `bath_bed3` (Attached Bath 3).
+  - Eliminated silent dropping of bathrooms; verified with unit tests and live browser execution.
+- [x] **Ground Floor Balcony & Verandah Sit-Out Integration**:
+  - Removed single-floor balcony omission logic.
+  - Implemented covered `Front Balcony / Sit-Out` (`பூமுக வராண்டா`) on Floor 0 whenever the user ticks Balcony, directly connecting to the front living lounge and car parking porch.
+- [x] **Realistic, Practical Kitchen & Dining Proportions**:
+  - Resized modular kitchens from cramped single-column leftovers into spacious, functional chef kitchens ($140\text{--}258\,\text{sq ft}$, e.g. $17'\times 11'$ or $14.4'\times 18'$) with dedicated attached Utility & Wash Yards ($6'\times 18'$ or $8'\times 18'$).
+  - Scaled dining halls to realistic, balanced proportions ($160\text{--}250\,\text{sq ft}$) instead of the previous $408\,\text{sq ft}$ banquet room.
+- [x] **Architectural Bathroom Proportion Bounds (No 17-ft Bowling Alleys)**:
+  - Enforced width and depth bounds ($5'\times 7'$ to $7'\times 9.5'$, $40\text{--}66\,\text{sq ft}$) with aspect ratios bounded between $1.2$ and $1.5$.
+  - Integrated walk-in wardrobe and dressing alcoves to maintain clean geometric envelopes.
+- [x] **4 Truly Distinct Architectural Archetypes on "Another Plan"**:
+  - Archetype 0: **Traditional Vastu Courtyard Flow** (NW Car Porch, NE Verandah/Living, Brahmasthan Dining, SE Agni Kitchen/Utility, SW Niruthi Master Suite).
+  - Archetype 1: **Contemporary Open Great-Room Layout** (L-shaped social pavilion, open dining, island kitchen with pantry, side sleeping suites).
+  - Archetype 2: **Split-Wing Generational Suite Layout** (Step-free senior bedroom with private bath at front left, central family living & dining, rear master suite).
+  - Archetype 3: **Linear Breezeway & Central Gallery Suite Layout** (H-plan with central gallery corridor dividing private suites and daytime pavilion).
+- [x] **Testing & Verification**:
+  - 32 Pytest backend tests passing in `backend/tests/` (added `test_user_reported_floorplan_requirements_3baths_balcony_kitchen`).
+  - Production build passing in 230ms (`npm run build`).
+  - Captured live browser screenshots:
+    - `docs/screenshots/realworld_verified_plan_3baths_balcony.png` (Layout A: 3 baths, balcony, 188 sq ft kitchen)
+    - `docs/screenshots/realworld_verified_vastu_plan_3baths.png` (Layout B: 3 baths, balcony, 190 sq ft kitchen)
+    - `docs/screenshots/realworld_verified_another_plan_option.png` (Appended layout options on seed rotation)
+
