@@ -1,0 +1,143 @@
+{
+  "source": "Tamil Nadu PWD Schedule of Rates (SOR) 2025-2026 & Builders Association of India (BAI) Regional Price Index",
+  "as_of": "January 2026",
+  "currency": "INR",
+  "base_district": "coimbatore",
+  "districts": {
+    "chennai": {
+      "id": "chennai",
+      "name": "Chennai (CMDA Metro)",
+      "zone": "Zone 1 - Metro / Coastal",
+      "multiplier": 1.08,
+      "description": "High logistic overheads, entry-timing truck restrictions, union unloading charges, CMDA scrutiny.",
+      "material_rates": {
+        "cement_53_grade_per_bag": 440,
+        "tmt_steel_fe550d_per_ton": 71500,
+        "m_sand_per_ton": 1950,
+        "p_sand_per_ton": 2150,
+        "blue_metal_20mm_per_ton": 1450,
+        "country_clay_bricks_per_piece": 10.5,
+        "fly_ash_bricks_per_piece": 7.2,
+        "vitrified_tiles_per_sqft": 92,
+        "exterior_emulsion_per_litre": 280
+      },
+      "labor_wages_per_day": {
+        "head_mason": 1050,
+        "assistant_mason": 850,
+        "barbender": 950,
+        "shuttering_carpenter": 950,
+        "licensed_plumber": 900,
+        "licensed_electrician": 900,
+        "general_helper": 650
+      }
+    },
+    "coimbatore": {
+      "id": "coimbatore",
+      "name": "Coimbatore (Kongu Hub)",
+      "zone": "Zone 2 - Industrial / Western Baseline",
+      "multiplier": 1.00,
+      "description": "Direct proximity to Karur/Sulur M-sand quarries and Kangeyam aggregate crushers, disciplined labor contracting.",
+      "material_rates": {
+        "cement_53_grade_per_bag": 420,
+        "tmt_steel_fe550d_per_ton": 68000,
+        "m_sand_per_ton": 1800,
+        "p_sand_per_ton": 2000,
+        "blue_metal_20mm_per_ton": 1350,
+        "country_clay_bricks_per_piece": 9.0,
+        "fly_ash_bricks_per_piece": 6.5,
+        "vitrified_tiles_per_sqft": 85,
+        "exterior_emulsion_per_litre": 260
+      },
+      "labor_wages_per_day": {
+        "head_mason": 950,
+        "assistant_mason": 750,
+        "barbender": 850,
+        "shuttering_carpenter": 850,
+        "licensed_plumber": 800,
+        "licensed_electrician": 800,
+        "general_helper": 550
+      }
+    },
+    "madurai": {
+      "id": "madurai",
+      "name": "Madurai (South Hub)",
+      "zone": "Zone 3 - Southern Zone",
+      "multiplier": 0.96,
+      "description": "Abundant local red clay kilns (Thirumangalam), local granite crushers, competitive regional masonry.",
+      "material_rates": {
+        "cement_53_grade_per_bag": 415,
+        "tmt_steel_fe550d_per_ton": 67500,
+        "m_sand_per_ton": 1750,
+        "p_sand_per_ton": 1950,
+        "blue_metal_20mm_per_ton": 1300,
+        "country_clay_bricks_per_piece": 8.5,
+        "fly_ash_bricks_per_piece": 6.2,
+        "vitrified_tiles_per_sqft": 82,
+        "exterior_emulsion_per_litre": 255
+      },
+      "labor_wages_per_day": {
+        "head_mason": 900,
+        "assistant_mason": 720,
+        "barbender": 820,
+        "shuttering_carpenter": 820,
+        "licensed_plumber": 780,
+        "licensed_electrician": 780,
+        "general_helper": 520
+      }
+    },
+    "trichy": {
+      "id": "trichy",
+      "name": "Tiruchirappalli (Delta Hub)",
+      "zone": "Zone 4 - Delta / Central Zone",
+      "multiplier": 0.95,
+      "description": "Central connectivity along NH-45, balanced availability of clay brick kilns along Cauvery delta.",
+      "material_rates": {
+        "cement_53_grade_per_bag": 410,
+        "tmt_steel_fe550d_per_ton": 67000,
+        "m_sand_per_ton": 1720,
+        "p_sand_per_ton": 1900,
+        "blue_metal_20mm_per_ton": 1280,
+        "country_clay_bricks_per_piece": 8.2,
+        "fly_ash_bricks_per_piece": 6.0,
+        "vitrified_tiles_per_sqft": 80,
+        "exterior_emulsion_per_litre": 250
+      },
+      "labor_wages_per_day": {
+        "head_mason": 900,
+        "assistant_mason": 700,
+        "barbender": 800,
+        "shuttering_carpenter": 800,
+        "licensed_plumber": 750,
+        "licensed_electrician": 750,
+        "general_helper": 500
+      }
+    },
+    "salem": {
+      "id": "salem",
+      "name": "Salem (Steel & Mineral Hub)",
+      "zone": "Zone 5 - West-Central Industrial",
+      "multiplier": 0.94,
+      "description": "Direct freight advantage for SAIL/JSW TMT rebar and Sankari cement plants, lowest raw material transport cost.",
+      "material_rates": {
+        "cement_53_grade_per_bag": 405,
+        "tmt_steel_fe550d_per_ton": 65500,
+        "m_sand_per_ton": 1700,
+        "p_sand_per_ton": 1880,
+        "blue_metal_20mm_per_ton": 1250,
+        "country_clay_bricks_per_piece": 8.4,
+        "fly_ash_bricks_per_piece": 5.9,
+        "vitrified_tiles_per_sqft": 80,
+        "exterior_emulsion_per_litre": 250
+      },
+      "labor_wages_per_day": {
+        "head_mason": 920,
+        "assistant_mason": 710,
+        "barbender": 810,
+        "shuttering_carpenter": 810,
+        "licensed_plumber": 760,
+        "licensed_electrician": 760,
+        "general_helper": 510
+      }
+    }
+  }
+}

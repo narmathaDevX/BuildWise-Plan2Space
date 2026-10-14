@@ -1,0 +1,42 @@
+{
+  "statutory_act": "Tamil Nadu Combined Development and Building Rules, 2019 (TNCDBR 2019)",
+  "governing_order": "G.O. (Ms) No. 18, Housing and Urban Development [UD4(3)] Department, dt. 04.02.2019",
+  "authority": "Directorate of Town and Country Planning (DTCP) & Chennai Metropolitan Development Authority (CMDA)",
+  "rules": {
+    "residential_ordinary": {
+      "max_height_metres": 12.0,
+      "max_floors": 4,
+      "max_plot_coverage_pct": 70.0,
+      "fsi_limits": {
+        "road_width_below_9m": 1.50,
+        "road_width_9m_to_12m": 1.75,
+        "road_width_above_12m": 2.00
+      },
+      "minimum_setbacks_feet": {
+        "front": 5.0,
+        "rear": 5.0,
+        "side_left": 3.0,
+        "side_right": 3.0
+      },
+      "minimum_ceiling_height_feet": 9.0,
+      "minimum_habitable_room_area_sqft": 100.0,
+      "minimum_room_width_feet": 8.0,
+      "mandatory_rainwater_harvesting": {
+        "required": true,
+        "act_reference": "Section 215-A of Tamil Nadu District Municipalities Act & G.O. Ms No. 138/MAWS",
+        "sizing_factor_litres_per_sqft_roof": 1.25,
+        "minimum_pit_dia_feet": 4.5,
+        "minimum_pit_depth_feet": 10.0
+      },
+      "sump_tank_requirements": {
+        "mandatory": true,
+        "minimum_capacity_litres": 6000,
+        "recommended_capacity_litres": 8000
+      },
+      "septic_tank_requirements": {
+        "mandatory_if_no_underground_sewer": true,
+        "standard_two_compartment_capacity_litres": 10000
+      }
+    }
+  }
+}

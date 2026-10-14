@@ -21,6 +21,8 @@ import {
   X,
   FileSpreadsheet,
   Info,
+  Users,
+  MapPin,
 } from "lucide-react";
 import {
   getProjectMaterials,
@@ -28,6 +30,7 @@ import {
   addCustomMaterial,
   getMaterialsDataset,
   getMaterialsCsvUrl,
+  getTnDistrictRates,
 } from "../services/api";
 
 function formatCurrency(value) {
@@ -78,6 +81,23 @@ function Materials() {
   const [provenanceData, setProvenanceData] = useState(null);
   const [datasetLoading, setDatasetLoading] = useState(false);
   const [datasetFilter, setDatasetFilter] = useState("All");
+
+  // Tamil Nadu District Rates & Wage Schedule State
+  const [districtsData, setDistrictsData] = useState(null);
+  const [selectedDistrict, setSelectedDistrict] = useState("coimbatore");
+  const [showWagesModal, setShowWagesModal] = useState(false);
+
+  useEffect(() => {
+    async function loadDistricts() {
+      try {
+        const res = await getTnDistrictRates();
+        if (res) setDistrictsData(res);
+      } catch (err) {
+        console.error("Failed to load district rates:", err);
+      }
+    }
+    loadDistricts();
+  }, []);
 
   const loadProvenanceDataset = async () => {
     if (provenanceData) return;
@@ -460,6 +480,112 @@ function Materials() {
               </button>
             </div>
           </form>
+        </section>
+      )}
+
+      {/* TAMIL NADU DISTRICT PRICING & LABOR WAGE RATES */}
+      {districtsData?.districts && (
+        <section
+          style={{
+            padding: "16px 20px",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: "12px",
+            marginBottom: "24px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "12px",
+              marginBottom: "14px",
+            }}
+          >
+            <div>
+              <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "1px", color: "var(--accent)" }}>
+                TAMIL NADU REGIONAL RATES & WAGES (SOR 2025–2026)
+              </span>
+              <h3 style={{ margin: "4px 0 0", fontSize: "16px", color: "var(--text)" }}>
+                District Pricing & Daily Labor Wage Schedule
+              </h3>
+            </div>
+
+            <button
+              type="button"
+              className="outline-button"
+              onClick={() => setShowWagesModal(true)}
+              style={{ fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 12px" }}
+            >
+              <Users size={14} />
+              View Daily Wage Schedule
+            </button>
+          </div>
+
+          {/* DISTRICT BUTTONS */}
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+            {Object.entries(districtsData.districts).map(([dKey, dObj]) => {
+              const isSelected = selectedDistrict === dKey;
+              return (
+                <button
+                  key={dKey}
+                  type="button"
+                  onClick={() => setSelectedDistrict(dKey)}
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: "8px",
+                    border: isSelected ? "1px solid var(--accent)" : "1px solid var(--border)",
+                    background: isSelected ? "rgba(2, 132, 199, 0.12)" : "var(--surface-2)",
+                    color: isSelected ? "var(--accent)" : "var(--text)",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    fontWeight: isSelected ? 700 : 500,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <MapPin size={13} />
+                  <span>{dObj.name}</span>
+                  <span style={{ fontSize: "11px", opacity: 0.8, padding: "1px 5px", borderRadius: "4px", background: isSelected ? "rgba(2, 132, 199, 0.2)" : "var(--surface)" }}>
+                    {dObj.multiplier}x
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ACTIVE DISTRICT HIGHLIGHTS */}
+          {districtsData.districts[selectedDistrict] && (
+            <div
+              style={{
+                marginTop: "12px",
+                padding: "10px 14px",
+                background: "var(--surface-2)",
+                borderRadius: "8px",
+                fontSize: "12px",
+                color: "var(--text-soft)",
+                lineHeight: 1.5,
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "16px",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <strong>Zone:</strong> {districtsData.districts[selectedDistrict].zone}
+              </div>
+              <div style={{ flex: 1 }}>
+                <strong>Logistics Note:</strong> {districtsData.districts[selectedDistrict].description}
+              </div>
+              <div>
+                <strong>Mason:</strong> ₹{districtsData.districts[selectedDistrict].labor_wages_per_day.head_mason}/day •{" "}
+                <strong>Helper:</strong> ₹{districtsData.districts[selectedDistrict].labor_wages_per_day.general_helper}/day
+              </div>
+            </div>
+          )}
         </section>
       )}
 
@@ -931,6 +1057,146 @@ function Materials() {
                 onClick={() => setShowProvenanceModal(false)}
                 className="outline-button"
                 style={{ padding: "5px 14px", fontSize: "12px" }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WAGES SCHEDULE MODAL */}
+      {showWagesModal && districtsData?.districts && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.6)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "var(--surface)",
+              borderRadius: "14px",
+              width: "100%",
+              maxWidth: "850px",
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+              border: "1px solid var(--border)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "20px 24px",
+                borderBottom: "1px solid var(--border)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+              }}
+            >
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "1px", color: "var(--accent)" }}>
+                  TAMIL NADU PWD SCHEDULE OF RATES (SOR) 2025–2026
+                </span>
+                <h2 style={{ margin: "4px 0 0", fontSize: "20px", color: "var(--text)" }}>
+                  Daily Labor Wage Schedule by District
+                </h2>
+                <p style={{ margin: "4px 0 0", fontSize: "12px", color: "var(--text-soft)" }}>
+                  Mandatory PWD minimum daily wage schedule across the 5 primary construction zones in Tamil Nadu.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowWagesModal(false)}
+                className="icon-button"
+                style={{ padding: "6px", background: "none", border: "none", cursor: "pointer", color: "var(--text-soft)" }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: "20px 24px", overflowY: "auto", flex: 1 }}>
+              <div style={{ padding: "12px 16px", borderRadius: "8px", background: "var(--surface-2)", border: "1px solid var(--border)", marginBottom: "16px", fontSize: "12px", color: "var(--text)", lineHeight: 1.5 }}>
+                💡 <strong>Labor Cost Advisory:</strong> Direct site labor comprises <strong>30% to 35%</strong> of residential build costs in Tamil Nadu. Rates reflect standard 8:30 AM to 5:30 PM working shifts including morning and afternoon tea breaks.
+              </div>
+
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--text-soft)" }}>
+                    <th style={{ padding: "10px", fontWeight: 600 }}>Construction Trade / Craft</th>
+                    <th style={{ padding: "10px", textAlign: "right" }}>Chennai</th>
+                    <th style={{ padding: "10px", textAlign: "right" }}>Coimbatore</th>
+                    <th style={{ padding: "10px", textAlign: "right" }}>Madurai</th>
+                    <th style={{ padding: "10px", textAlign: "right" }}>Trichy</th>
+                    <th style={{ padding: "10px", textAlign: "right" }}>Salem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { label: "Head Mason (Maistry)", key: "head_mason" },
+                    { label: "Assistant Mason", key: "assistant_mason" },
+                    { label: "Barbender (Rebar Specialist)", key: "barbender" },
+                    { label: "Shuttering Carpenter", key: "shuttering_carpenter" },
+                    { label: "Licensed Plumber", key: "licensed_plumber" },
+                    { label: "Licensed Electrician", key: "licensed_electrician" },
+                    { label: "General Helper (Male/Female)", key: "general_helper" },
+                  ].map((trade, idx) => (
+                    <tr
+                      key={trade.key}
+                      style={{
+                        borderBottom: "1px solid var(--border)",
+                        background: idx % 2 === 0 ? "transparent" : "var(--surface-2)",
+                      }}
+                    >
+                      <td style={{ padding: "10px", fontWeight: 600, color: "var(--text)" }}>
+                        {trade.label}
+                      </td>
+                      {["chennai", "coimbatore", "madurai", "trichy", "salem"].map((dId) => {
+                        const wage = districtsData.districts[dId]?.labor_wages_per_day?.[trade.key];
+                        return (
+                          <td key={dId} style={{ padding: "10px", textAlign: "right", fontFamily: "monospace", color: dId === selectedDistrict ? "var(--accent)" : "var(--text)", fontWeight: dId === selectedDistrict ? 700 : 400 }}>
+                            ₹{wage ? wage.toLocaleString("en-IN") : "—"}/day
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                padding: "12px 24px",
+                borderTop: "1px solid var(--border)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                fontSize: "11px",
+                color: "var(--text-soft)",
+              }}
+            >
+              <span>Source: Government of Tamil Nadu PWD Schedule of Rates (SOR) 2025–2026</span>
+              <button
+                type="button"
+                onClick={() => setShowWagesModal(false)}
+                className="outline-button"
+                style={{ padding: "6px 16px", fontSize: "12px" }}
               >
                 Close
               </button>

@@ -18,6 +18,10 @@ import {
   Square,
   Plus,
   FastForward,
+  ShieldCheck,
+  AlertTriangle,
+  FileCheck,
+  Layers3,
 } from "lucide-react";
 import {
   getProjectConstruction,
@@ -25,6 +29,7 @@ import {
   updateProjectTask,
   postponeProjectTask,
   createProjectTask,
+  getProjectMilestones,
 } from "../services/api";
 
 const STAGE_ICONS = {
@@ -48,6 +53,10 @@ function Construction() {
   const [tasksLoading, setTasksLoading] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
   const [taskSubmitting, setTaskSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("tasks"); // "tasks" | "milestones" | "quality"
+  const [milestonesData, setMilestonesData] = useState(null);
+  const [milestonesLoading, setMilestonesLoading] = useState(false);
+
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -55,6 +64,21 @@ function Construction() {
     stage_key: "foundation",
     is_critical: false,
   });
+
+  useEffect(() => {
+    async function loadMilestones() {
+      try {
+        setMilestonesLoading(true);
+        const res = await getProjectMilestones();
+        if (res) setMilestonesData(res);
+      } catch (err) {
+        console.error("Failed to load milestones:", err);
+      } finally {
+        setMilestonesLoading(false);
+      }
+    }
+    loadMilestones();
+  }, []);
 
   const loadTasks = async (dayToLoad) => {
     try {
@@ -419,7 +443,40 @@ function Construction() {
       ====================================================== */}
 
       <section className="construction-section">
-        <div className="section-heading">
+        {/* TAB CONTROLS */}
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "20px", borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
+          <button
+            type="button"
+            className={activeTab === "tasks" ? "primary-button" : "outline-button"}
+            onClick={() => setActiveTab("tasks")}
+            style={{ fontSize: "13px", padding: "8px 16px", borderRadius: "20px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <CheckSquare size={15} />
+            Daily Site Tasks ({tasksData?.max_day || 40} Days)
+          </button>
+          <button
+            type="button"
+            className={activeTab === "milestones" ? "primary-button" : "outline-button"}
+            onClick={() => setActiveTab("milestones")}
+            style={{ fontSize: "13px", padding: "8px 16px", borderRadius: "20px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <ShieldCheck size={15} />
+            Contractor Payment Escrow (8 Milestones)
+          </button>
+          <button
+            type="button"
+            className={activeTab === "quality" ? "primary-button" : "outline-button"}
+            onClick={() => setActiveTab("quality")}
+            style={{ fontSize: "13px", padding: "8px 16px", borderRadius: "20px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <FileCheck size={15} />
+            On-Site Quality Protocols
+          </button>
+        </div>
+
+        {activeTab === "tasks" && (
+          <>
+            <div className="section-heading">
           <div>
             <span className="eyebrow">
               DAILY SITE EXECUTION CHECKLIST
@@ -633,6 +690,177 @@ function Construction() {
             ))
           )}
         </div>
+          </>
+        )}
+
+        {/* TAB 2: CONTRACTOR MILESTONE PAYMENT ESCROW */}
+        {activeTab === "milestones" && (
+          <div>
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow">CONTRACTOR PAYMENT PROTECTION</span>
+                <h2>8-Stage Milestone Escrow Schedule</h2>
+              </div>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center", fontSize: "0.85rem" }}>
+                <span style={{ padding: "4px 10px", borderRadius: "6px", background: "rgba(34, 197, 94, 0.15)", color: "#16a34a", fontWeight: 600 }}>
+                  90-Day Retention: ₹{((milestonesData?.retention_reserve_amount || 162500) / 100000).toFixed(1)} Lakh (5%)
+                </span>
+              </div>
+            </div>
+
+            <div style={{ padding: "14px 18px", borderRadius: "10px", background: "var(--surface)", border: "1px solid var(--border)", marginBottom: "20px", display: "flex", alignItems: "flex-start", gap: "12px" }}>
+              <ShieldCheck size={24} style={{ color: "#22c55e", flexShrink: 0, marginTop: "2px" }} />
+              <div style={{ fontSize: "0.88rem", lineHeight: 1.5, color: "var(--text)" }}>
+                <strong>Homeowner Anti-Abandonment Clause:</strong> In Tamil Nadu, releasing large advances before physical stage completion is the #1 cause of contractor abandonment. Payments are strictly milestone-gated upon passing each written physical inspection. The final 5% is withheld for 90 days post-housewarming to verify terrace waterproofing against monsoons.
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {(milestonesData?.milestones || []).map((m) => {
+                const isReleased = m.status === "released";
+                const isPending = m.status === "pending_inspection";
+                return (
+                  <div
+                    key={m.milestone_number}
+                    style={{
+                      padding: "16px 20px",
+                      borderRadius: "10px",
+                      background: "var(--surface)",
+                      border: isPending ? "2px solid #f59e0b" : "1px solid var(--border)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: isReleased ? "#22c55e" : (isPending ? "#f59e0b" : "var(--surface-2)"), color: isReleased || isPending ? "#ffffff" : "var(--text-soft)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700 }}>
+                          {isReleased ? "✓" : m.milestone_number}
+                        </span>
+                        <div>
+                          <strong style={{ fontSize: "1.02rem", color: "var(--text)" }}>
+                            Stage {m.milestone_number}: {m.stage_name}
+                          </strong>
+                          <span style={{ marginLeft: "8px", fontSize: "0.78rem", padding: "2px 6px", borderRadius: "4px", background: "var(--surface-2)", color: "var(--text-soft)" }}>
+                            {m.pct_share}% of Civil Cost
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <strong style={{ fontSize: "1.05rem", color: "var(--text)" }}>
+                          ₹{m.amount.toLocaleString("en-IN")}
+                        </strong>
+                        <span style={{
+                          fontSize: "0.78rem",
+                          fontWeight: 700,
+                          padding: "4px 10px",
+                          borderRadius: "12px",
+                          background: isReleased ? "rgba(34, 197, 94, 0.15)" : (isPending ? "rgba(245, 158, 11, 0.15)" : "var(--surface-2)"),
+                          color: isReleased ? "#16a34a" : (isPending ? "#d97706" : "var(--text-soft)"),
+                        }}>
+                          {isReleased ? "PAID / RELEASED" : (isPending ? "PENDING INSPECTION" : "UPCOMING")}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p style={{ margin: "4px 0", fontSize: "0.86rem", color: "var(--text-soft)", lineHeight: 1.4 }}>
+                      {m.description}
+                    </p>
+
+                    <div style={{ marginTop: "6px", padding: "10px 14px", borderRadius: "8px", background: "var(--surface-2)", border: "1px solid var(--border)", fontSize: "0.82rem", lineHeight: 1.4 }}>
+                      <span style={{ color: "#d97706", fontWeight: 700, marginRight: "6px" }}>🔍 MANDATORY INSPECTION GATE:</span>
+                      <span style={{ color: "var(--text)" }}>{m.inspection_gate}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: QUALITY PROTOCOLS */}
+        {activeTab === "quality" && (
+          <div>
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow">NON-ENGINEER INSPECTION MANUAL</span>
+                <h2>5 Critical On-Site Quality Checks</h2>
+              </div>
+            </div>
+
+            <p style={{ fontSize: "0.9rem", color: "var(--text-soft)", margin: "0 0 20px", lineHeight: 1.5 }}>
+              Tamil Nadu construction quality defects occur when standard practices are skipped during concrete pouring and masonry. Perform these simple checks as a homeowner before releasing contractor milestone payments.
+            </p>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
+              <div style={{ padding: "18px", borderRadius: "10px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <ShieldCheck size={20} style={{ color: "#22c55e" }} />
+                  <strong style={{ fontSize: "1rem" }}>1. Concrete Cover Blocks (50mm / 25mm)</strong>
+                </div>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-soft)", lineHeight: 1.5 }}>
+                  Ensure concrete spacer blocks are placed beneath footing rebar (50mm) and slab rebar (25mm) before pouring. Without cover blocks, rebar touches soil/shuttering and corrodes within 3 years.
+                </p>
+                <div style={{ fontSize: "0.8rem", padding: "6px 10px", borderRadius: "6px", background: "var(--surface-2)", color: "#16a34a", fontWeight: 600, marginTop: "8px" }}>
+                  ✓ Pass criteria: Steel rebar is elevated and completely enveloped in concrete.
+                </div>
+              </div>
+
+              <div style={{ padding: "18px", borderRadius: "10px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <Droplets size={20} style={{ color: "#0284c7" }} />
+                  <strong style={{ fontSize: "1rem" }}>2. 14-Day Continuous Wet Hessian Curing</strong>
+                </div>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-soft)", lineHeight: 1.5 }}>
+                  In Tamil Nadu's hot climate (32°C–38°C), hydration water evaporates rapidly. Columns must be wrapped in wet gunny bags and wet twice daily for 14 continuous days to achieve M20/M25 design compressive strength.
+                </p>
+                <div style={{ fontSize: "0.8rem", padding: "6px 10px", borderRadius: "6px", background: "var(--surface-2)", color: "#0284c7", fontWeight: 600, marginTop: "8px" }}>
+                  ✓ Pass criteria: Hessian bags remain visibly damp from 8:00 AM to 6:00 PM.
+                </div>
+              </div>
+
+              <div style={{ padding: "18px", borderRadius: "10px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <Layers3 size={20} style={{ color: "#f59e0b" }} />
+                  <strong style={{ fontSize: "1rem" }}>3. Field Sand Silt Jar Test (&lt; 8%)</strong>
+                </div>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-soft)", lineHeight: 1.5 }}>
+                  Fill 1/3 of a glass jar with M-sand or river sand, add water and salt, shake vigorously for 1 minute, and allow to settle for 3 hours. The silt layer settling on top must be under 8% of total sand height to avoid weak crumbly plaster.
+                </p>
+                <div style={{ fontSize: "0.8rem", padding: "6px 10px", borderRadius: "6px", background: "var(--surface-2)", color: "#d97706", fontWeight: 600, marginTop: "8px" }}>
+                  ✓ Pass criteria: Upper muddy silt layer thickness / sand thickness &lt; 0.08.
+                </div>
+              </div>
+
+              <div style={{ padding: "18px", borderRadius: "10px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <Zap size={20} style={{ color: "#8b5cf6" }} />
+                  <strong style={{ fontSize: "1rem" }}>4. CPVC Water Line 10-Bar Pressure Test</strong>
+                </div>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-soft)", lineHeight: 1.5 }}>
+                  Before concealing hot and cold water pipes in bathroom brickwork, the plumbing contractor must pressurize lines to 10 kg/cm² for 24 hours using a hand test pump. Zero pressure drop guarantees no leaks behind costly wall tiles.
+                </p>
+                <div style={{ fontSize: "0.8rem", padding: "6px 10px", borderRadius: "6px", background: "var(--surface-2)", color: "#8b5cf6", fontWeight: 600, marginTop: "8px" }}>
+                  ✓ Pass criteria: Pressure gauge holds constant at 10 bar for full 24 hours.
+                </div>
+              </div>
+
+              <div style={{ padding: "18px", borderRadius: "10px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <Hammer size={20} style={{ color: "#ec4899" }} />
+                  <strong style={{ fontSize: "1rem" }}>5. Vitrified Tile Mallet Tap Test</strong>
+                </div>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-soft)", lineHeight: 1.5 }}>
+                  Tap all four corners and center of newly installed 4x2 ft vitrified tiles with a rubber or wooden mallet. Any hollow 'drummy' sound indicates missing cement mortar underneath, which will crack when loaded with furniture.
+                </p>
+                <div style={{ fontSize: "0.8rem", padding: "6px 10px", borderRadius: "6px", background: "var(--surface-2)", color: "#ec4899", fontWeight: 600, marginTop: "8px" }}>
+                  ✓ Pass criteria: Solid, uniform dull sound across all room tile surfaces.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
 

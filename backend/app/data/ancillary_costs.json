@@ -1,0 +1,70 @@
+{
+  "currency": "INR",
+  "as_of": "January 2026",
+  "authority": "Builders Association of India (BAI) Tamil Nadu Centre & Real Estate Regulatory Authority (TNRERA) Guidelines",
+  "packages": [
+    {
+      "key": "dtcp_cmda_approval",
+      "name": "DTCP / CMDA & Local Body Plan Sanction",
+      "category": "Statutory & Legal",
+      "description": "Building plan scrutiny fee, infrastructure development charges, vacant land tax clearance, online single-window processing, and sanction order.",
+      "base_amount": 85000,
+      "formula_per_sqft": 35.0,
+      "mandatory": true
+    },
+    {
+      "key": "tneb_power_connection",
+      "name": "TANGEDCO / TNEB 3-Phase Electrical Service Connection",
+      "category": "Utility Infrastructure",
+      "description": "3-phase meter board installation, development fee, meter security deposit, TNEB temporary construction supply conversion to permanent residential tariff.",
+      "base_amount": 65000,
+      "formula_per_sqft": 0.0,
+      "mandatory": true
+    },
+    {
+      "key": "borewell_pumping_system",
+      "name": "Borewell Drilling (300 ft) & 1.5 HP Submersible Pump",
+      "category": "Water Source",
+      "description": "Drilling up to 300 ft in Tamil Nadu hard rock/gravel, 7-inch heavy PVC casing pipe up to rock head, 1.5 HP stainless steel submersible pump, delivery pipe, and automatic water level controller.",
+      "base_amount": 165000,
+      "formula_per_sqft": 0.0,
+      "mandatory": true
+    },
+    {
+      "key": "underground_sump_septic_tank",
+      "name": "Underground RCC Sump (8,000L) & Bio-Septic Tank",
+      "category": "Sanitary & Storage",
+      "description": "Excavation and casting of 8,000-litre waterproofed RCC drinking water sump tank, plus two-compartment masonry/precast septic tank with percolation soak pit.",
+      "base_amount": 175000,
+      "formula_per_sqft": 15.0,
+      "mandatory": true
+    },
+    {
+      "key": "compound_wall_main_gate",
+      "name": "Compound Wall (140 R.ft) & Wrought Iron Main Gate",
+      "category": "Site Boundary & Security",
+      "description": "5-foot high boundary compound wall using 6-inch solid blocks with RCC stiffener columns every 10 ft, cement plastering, exterior paint, and a 12-ft wide designer iron entrance gate.",
+      "base_amount": 240000,
+      "formula_per_sqft": 0.0,
+      "mandatory": false
+    },
+    {
+      "key": "structural_soil_testing",
+      "name": "Soil Investigation & Structural Engineering Design",
+      "category": "Engineering & Quality",
+      "description": "Standard Penetration Test (SPT) soil bore test report, safe bearing capacity (SBC) calculation, complete structural RCC drawings (footing, column, plinth, lintel, slab rebar schedules) with stability certificate.",
+      "base_amount": 45000,
+      "formula_per_sqft": 0.0,
+      "mandatory": true
+    },
+    {
+      "key": "rainwater_harvesting_structure",
+      "name": "Mandatory Rainwater Harvesting (RWH) Percolation Pit",
+      "category": "Environmental Statutory",
+      "description": "10-foot deep brick-lined recharge shaft with 40mm aggregate and coarse sand filter bed connected to roof drainage channels as required by Tamil Nadu municipal bye-laws.",
+      "base_amount": 28000,
+      "formula_per_sqft": 0.0,
+      "mandatory": true
+    }
+  ]
+}

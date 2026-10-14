@@ -158,3 +158,72 @@ This checklist tracks the implementation of backend, database, cost/schedule/mat
     - `16_generated_plan_distinct_options.png`
     - `17_generated_plan_appended_archetype.png`
 
+---
+
+## Phase 11: Real-World Tamil Nadu Production Platform Transformation
+- [x] **TNCDBR 2019 Statutory Compliance Engine (`backend/app/data/tncdbr_rules.json`, `services/compliance.py`, `routers/estimates.py`, `routers/projects.py`)**:
+  - Encoded official statutory rules from Tamil Nadu Combined Development and Building Rules, 2019 (G.O. Ms No. 18, Housing & Urban Development Dept, dt. 04.02.2019).
+  - Implemented automated evaluation for:
+    - Maximum Ground Plot Coverage (<= 70%).
+    - Permissible Floor Space Index (FSI 1.50 for road < 9m, 1.75 for 9m-12m, 2.00 for > 12m).
+    - Minimum Building Yard Setbacks (5 ft front, 5 ft rear, 3 ft sides).
+    - Non-High Rise Residential Height Ceiling (<= G+3 / 12 metres).
+    - Mandatory Rainwater Harvesting (RWH) percolation pit sizing (1.25 L per sq ft roof area under Section 215-A of Tamil Nadu District Municipalities Act & G.O. Ms No. 138/MAWS).
+    - Sump (8,000L) and bio-septic tank (10,000L) sizing requirements.
+  - Exposed via `POST /api/estimate/compliance` and `GET /api/projects/current/compliance`.
+- [x] **Pre-Construction & Ancillary Cost Engine (`backend/app/data/ancillary_costs.json`, `services/ancillary.py`, `routers/estimates.py`, `routers/projects.py`)**:
+  - Solved the #1 real-world failure mode where builders budget only civil construction and run out of funds by accounting for 18%–22% in essential pre-construction items:
+    1. DTCP / CMDA & Local Body Plan Sanction (₹85k base + ₹35/sq ft)
+    2. TANGEDCO / TNEB 3-Phase Electrical Service Connection (₹65,000)
+    3. Borewell Drilling (300 ft) & 1.5 HP Stainless Submersible Pump (₹1,65,000)
+    4. Underground RCC Drinking Water Sump (8,000L) & Bio-Septic Tank (₹1,75,000)
+    5. Compound Boundary Wall (140 R.ft) & Wrought Iron Main Gate (₹2,40,000)
+    6. Soil Investigation (SPT Boring) & Structural Engineering Design (₹45,000)
+    7. Mandatory Rainwater Harvesting (RWH) Percolation Recharge Pit (₹28,000)
+  - Exposed via `POST /api/estimate/ancillary` and `GET /api/projects/current/ancillary`.
+- [x] **Contractor Milestone Payment Escrow & 5% Retention Fund (`services/milestones.py`, `routers/projects.py`, `Construction.jsx`)**:
+  - Implemented the 8-stage civil milestone payment schedule with exact 100% percentage distribution:
+    1. Mobilization & Site Demarcation (5%)
+    2. Footings & Plinth Beam Casting (15%)
+    3. RCC Columns & Roof Slab Casting (20%)
+    4. Brick Masonry & Lintel Bands (15%)
+    5. Concealed Plumbing & Electrical Rough-in (15%)
+    6. Internal Plastering & Floor Tiles (15%)
+    7. Painting, Sanitary Fittings & Joinery (10%)
+    8. Handover & Defect Liability Retention (5% held for 90 days)
+  - Enforced mandatory homeowner inspection gates before cheque release.
+  - Added anti-abandonment protections withholding 5% for 90 days to verify terrace waterproofing against monsoons.
+  - Integrated 3-tab navigation on `Construction.jsx` (`Daily Site Tasks`, `Contractor Payment Escrow`, `On-Site Quality Protocols`).
+- [x] **Homeowner On-Site Quality Inspection Protocols (`Construction.jsx`)**:
+  - Embedded 5 practical non-engineer inspection checks:
+    1. Concrete Cover Blocks (50mm on footings, 25mm on slabs).
+    2. 14-Day Continuous Wet Hessian Curing (Tamil Nadu heat protection).
+    3. Field Sand Silt Jar Test (< 8% silt).
+    4. CPVC Water Supply Line 10-Bar Pressure Test (zero leak before wall concealment).
+    5. Vitrified Floor Tile Mallet Tap Test (zero hollow drummy sound).
+- [x] **Tamil Nadu District-Level Pricing & Wage Rates Schedule (`backend/app/data/tn_district_rates_2026.json`, `routers/materials.py`, `Materials.jsx`)**:
+  - Implemented regional pricing across 5 zones:
+    - Chennai (CMDA Metro, 1.08x)
+    - Coimbatore (Kongu Baseline, 1.00x)
+    - Madurai (South Hub, 0.96x)
+    - Tiruchirappalli (Delta Hub, 0.95x)
+    - Salem (Steel & Mineral Hub, 0.94x)
+  - Encoded daily wage schedule per Tamil Nadu PWD SOR 2025–2026 across all 7 construction trades (Head Mason, Assistant Mason, Barbender, Shuttering Carpenter, Plumber, Electrician, Helper).
+  - Built interactive District Pricing Switcher bar and Daily Wage Schedule modal on `Materials.jsx`.
+- [x] **Bank Loan & DTCP Sanction Ready Construction Project Dossier (`Reports.jsx`, `routers/projects.py`)**:
+  - Integrated 3 capital tiers: Civil Contract, Pre-Construction Ancillaries, and All-Inclusive Total.
+  - Computed 80% Loan-to-Value (LTV) max bank loan eligibility and 20% owner equity contribution under SBI Realty, HDFC, and Canara Bank guidelines.
+  - Added stage-by-stage bank technical valuer disbursement schedule.
+  - Added official TNCDBR 2019 statutory compliance certificate and pre-construction ancillary packages breakdown.
+- [x] **Comprehensive Testing & Verification**:
+  - 31 passing Pytest backend tests in `backend/tests/` (including 7 new tests in `test_realworld_engines.py`).
+  - Frontend production build passing in ~200ms (`npm run build`).
+  - 7 visual verification screenshots captured in `docs/screenshots/`:
+    - `realworld_1_planner_compliance.png`
+    - `realworld_2_generated_plan.png`
+    - `realworld_3_construction_escrow.png`
+    - `realworld_4_construction_quality.png`
+    - `realworld_5_materials_districts.png`
+    - `realworld_6_materials_wages_modal.png`
+    - `realworld_7_reports_bank_dossier.png`
+

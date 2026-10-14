@@ -7,8 +7,11 @@ from sqlalchemy.orm import Session
 from backend.app.db.models import Estimate, Material, PlanModel, Project, User
 from backend.app.db.session import get_db
 from backend.app.routers.auth import get_current_user
+from backend.app.services.ancillary import calculate_ancillary_costs
+from backend.app.services.compliance import evaluate_tncdbr_compliance
 from backend.app.services.cost import calculate_cost
 from backend.app.services.materials import calculate_default_materials
+from backend.app.services.milestones import generate_milestone_schedule
 from backend.app.services.schedule import simulate_schedule
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
@@ -566,6 +569,44 @@ def get_project_report(
         },
     ]
 
+    ancillary_res = calculate_ancillary_costs(built_up_area=built_up, plot_area=plot_area)
+    ancillary_cost = ancillary_res["total_ancillary_cost"]
+    all_inclusive_total = total_cost + ancillary_cost
+
+    compliance_res = evaluate_tncdbr_compliance(
+        plot_width=pw,
+        plot_depth=pl,
+        built_up_area=built_up,
+        floors=int(form.get("floors", 1)),
+    )
+    milestones_res = generate_milestone_schedule(
+        civil_cost=total_cost,
+        current_completed_stages=completed_stages_count,
+    )
+
+    bank_loan_eligibility = int(round(all_inclusive_total * 0.80))
+    owner_equity = all_inclusive_total - bank_loan_eligibility
+
+    bank_loan_dossier = {
+        "all_inclusive_project_cost": all_inclusive_total,
+        "civil_contract_component": total_cost,
+        "ancillary_pre_construction_component": ancillary_cost,
+        "max_bank_loan_eligibility_80pct": bank_loan_eligibility,
+        "owner_equity_contribution_20pct": owner_equity,
+        "recommended_lenders": ["State Bank of India (SBI Home Loans)", "HDFC Bank Housing Finance", "Canara Bank Home Scheme"],
+        "is_statutory_compliant": compliance_res["is_statutory_compliant"],
+        "authority": "DTCP / CMDA Approved Architecture Norms",
+        "stage_disbursements": [
+            {
+                "stage": m["stage_name"],
+                "disbursement_pct": m["pct_share"],
+                "disbursement_amount": int(round((bank_loan_eligibility * m["pct_share"]) / 100.0)),
+                "inspection_requirement": m["inspection_gate"],
+            }
+            for m in milestones_res["milestones"]
+        ],
+    }
+
     return {
         "has_project": True,
         "project_name": project.name,
@@ -573,6 +614,8 @@ def get_project_report(
         "status_label": "Planning active",
         "budget": budget,
         "estimated_cost": total_cost,
+        "ancillary_cost": ancillary_cost,
+        "all_inclusive_total": all_inclusive_total,
         "remaining": remaining,
         "metrics": {
             "plot_area": plot_area,
@@ -583,10 +626,101 @@ def get_project_report(
             "current_phase": current_phase_name,
         },
         "cost_breakdown": breakdown,
+        "ancillary_breakdown": ancillary_res["items"],
         "materials_summary": {
             "purchased_count": purchased_mats,
             "total_count": total_mats,
         },
+        "compliance_summary": compliance_res,
+        "milestones_summary": milestones_res,
+        "bank_loan_dossier": bank_loan_dossier,
         "expected_completion": sched_data.get("completion_date", "September 2027"),
         "status_grid": status_grid,
     }
+
+
+@router.get("/current/milestones")
+def get_current_project_milestones(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    project = get_current_project(current_user, db)
+    if not project:
+        return generate_milestone_schedule(civil_cost=3250000.0, current_completed_stages=1)
+
+    est = db.query(Estimate).filter(Estimate.project_id == project.id).first()
+    cost_data = est.get_cost() if est else {}
+    civil_cost = float(cost_data.get("total_cost", 3250000.0))
+
+    cur_m = project.current_month or 1
+    completed_stages = 1 if cur_m <= 1 else min(7, cur_m)
+
+    return generate_milestone_schedule(civil_cost=civil_cost, current_completed_stages=completed_stages)
+
+
+@router.get("/current/compliance")
+def get_current_project_compliance(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    project = get_current_project(current_user, db)
+    if not project:
+        return evaluate_tncdbr_compliance(plot_width=40, plot_depth=60, built_up_area=1850)
+
+    form = project.get_form()
+    pw = float(form.get("width", 40))
+    pl = float(form.get("length", 60))
+    floors = int(form.get("floors", 1))
+
+    plan_m = (
+        db.query(PlanModel)
+        .filter(PlanModel.project_id == project.id, PlanModel.plan_id == project.selected_plan_id)
+        .first()
+        if project.selected_plan_id
+        else None
+    )
+    if plan_m:
+        pdata = plan_m.get_plan_data()
+        built_up = float(pdata.get("details", {}).get("total_built_up") or 1850)
+        ground_cov = float(pdata.get("details", {}).get("ground_built_up") or (built_up / floors))
+    else:
+        built_up = 1850.0
+        ground_cov = 1850.0 / floors
+
+    return evaluate_tncdbr_compliance(
+        plot_width=pw,
+        plot_depth=pl,
+        built_up_area=built_up,
+        ground_built_up_area=ground_cov,
+        floors=floors,
+    )
+
+
+@router.get("/current/ancillary")
+def get_current_project_ancillary(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    project = get_current_project(current_user, db)
+    if not project:
+        return calculate_ancillary_costs(built_up_area=1850, plot_area=2400)
+
+    form = project.get_form()
+    pw = float(form.get("width", 40))
+    pl = float(form.get("length", 60))
+    plot_area = pw * pl
+
+    plan_m = (
+        db.query(PlanModel)
+        .filter(PlanModel.project_id == project.id, PlanModel.plan_id == project.selected_plan_id)
+        .first()
+        if project.selected_plan_id
+        else None
+    )
+    built_up = (
+        float(plan_m.get_plan_data().get("details", {}).get("total_built_up") or 1850)
+        if plan_m
+        else 1850.0
+    )
+
+    return calculate_ancillary_costs(built_up_area=built_up, plot_area=plot_area)

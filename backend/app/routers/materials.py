@@ -208,3 +208,13 @@ def download_materials_csv() -> PlainTextResponse:
         headers={"Content-Disposition": 'attachment; filename="tamilnadu_pwd_bai_materials_2026.csv"'},
     )
 
+
+@router.get("/districts")
+def get_tn_district_rates() -> dict[str, Any]:
+    districts_path = Path(__file__).parent.parent / "data" / "tn_district_rates_2026.json"
+    if not districts_path.exists():
+        raise HTTPException(status_code=404, detail="District rates dataset not found.")
+    with open(districts_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data
+

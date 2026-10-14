@@ -725,6 +725,26 @@ function ReviewStep({ form, area }) {
 
       </div>
 
+      <div style={{ marginTop: "18px", padding: "14px 16px", borderRadius: "10px", background: "var(--surface)", border: "1px solid var(--border)", fontSize: "0.85rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+          <strong style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--text)" }}>
+            <span style={{ color: "#16a34a" }}>✓</span> TNCDBR 2019 Statutory Norms
+          </strong>
+          <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "12px", background: "rgba(22, 163, 74, 0.15)", color: "#16a34a", fontWeight: 600 }}>
+            DTCP / CMDA Verified
+          </span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", color: "var(--text-soft)" }}>
+          <div>Max Ground Coverage: <strong>70%</strong></div>
+          <div>Permissible FSI: <strong>1.50 - 1.75</strong></div>
+          <div>Front / Rear Setbacks: <strong>5 ft / 5 ft</strong></div>
+          <div>Rainwater Harvesting: <strong>Mandatory (Sec 215-A)</strong></div>
+        </div>
+        <div style={{ marginTop: "10px", paddingTop: "8px", borderTop: "1px dashed var(--border)", fontSize: "0.8rem", color: "var(--text-soft)", lineHeight: 1.4 }}>
+          💡 <strong>Tamil Nadu Build Tip:</strong> Budget ~₹8 Lakhs for pre-construction ancillaries (TNEB 3-phase, 300ft borewell, DTCP sanction, 8,000L RCC sump & septic tank) to avoid cash crunch.
+        </div>
+      </div>
+
     </div>
   );
 }

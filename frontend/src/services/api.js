@@ -240,3 +240,31 @@ export async function getMaterialsDataset() {
 export function getMaterialsCsvUrl() {
   return `${API_BASE_URL}/api/projects/current/materials/dataset/csv`;
 }
+
+export async function getTncdbrCompliance(params = null) {
+  if (params) {
+    return request("/api/estimate/compliance", {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
+  }
+  return request("/api/projects/current/compliance");
+}
+
+export async function getAncillaryCosts(params = null) {
+  if (params) {
+    return request("/api/estimate/ancillary", {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
+  }
+  return request("/api/projects/current/ancillary");
+}
+
+export async function getProjectMilestones() {
+  return request("/api/projects/current/milestones");
+}
+
+export async function getTnDistrictRates() {
+  return request("/api/projects/current/materials/districts");
+}

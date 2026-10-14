@@ -108,11 +108,32 @@ buildwise/
   1. Set `AUTH_REQUIRED=true` in `backend/.env`.
   2. Implement login/register modal dialogs in the frontend to store the received token via `localStorage.setItem('buildwise_token', token)`.
 
-### D. Cost Estimation Scope & Exclusions
-- The cost model estimates building construction from earthwork excavation up to architectural finishing.
-- **Excluded Items:** Land purchase, statutory municipal approvals, compound wall & gate, borewell/sump installation, interior furniture & modular woodwork, and rooftop solar installations. These are surfaced in API responses as `excluded_items`.
+### D. Cost Estimation Scope & Pre-Construction Ancillaries
+- Real-world home construction projects in Tamil Nadu frequently suffer 15%–25% budget overruns because owners budget only the "civil superstructure" and get blindsided by mandatory site infrastructure.
+- BuildWise explicitly models both **Civil Construction Costs** (M20 RCC structure, brick masonry, joinery, finishing) and **Pre-Construction Ancillary Packages**:
+  1. DTCP / CMDA & Local Body Plan Sanction (Single-window scrutiny & infrastructure charges).
+  2. TANGEDCO / TNEB 3-Phase Electrical Service Connection & Meter Security Deposit.
+  3. 300-ft Borewell Drilling & 1.5 HP Stainless Steel Submersible Pump System.
+  4. 8,000-Litre Underground RCC Drinking Water Sump & Bio-Septic Tank with Soak Pit.
+  5. 140 R.ft Compound Wall with RCC Stiffeners & 12-ft Wrought Iron Entrance Gate.
+  6. Soil Investigation (SPT Standard Penetration Test) & Structural Engineering Stamped Drawings.
+  7. Mandatory Rainwater Harvesting (RWH) Percolation Recharge Shaft (Section 215-A TN District Municipalities Act).
+- The consolidated Reports page combines both into an **All-Inclusive Total Project Cost** alongside an institutional **Bank Loan Project Dossier** formatted for SBI Realty and HDFC Home Loans (80% LTV financing).
 
-### E. Unused Files
+### E. Contractor Payment Protection & Milestone Escrow
+- Releasing large upfront cash advances is the leading cause of contractor abandonment and substandard material substitution in Tamil Nadu.
+- BuildWise incorporates the standard civil contracting **8-Stage Milestone Payment Schedule** with a mandatory **5% Handover Retention Fund**:
+  - Stage 1: Mobilization & Site Benchmark Layout (5%)
+  - Stage 2: Footings & Plinth Beam Concreting (15%)
+  - Stage 3: Columns & Roof Slab Casting (20%)
+  - Stage 4: Brick Masonry & Lintel Bands (15%)
+  - Stage 5: Concealed CPVC Plumbing & PVC Electrical Rough-in (15%)
+  - Stage 6: Internal Plastering & Floor Tiles (15%)
+  - Stage 7: Finishing, Royale Painting & Sanitary Fixtures (10%)
+  - Stage 8: Handover & Defect Liability Retention (5% held for 90 days)
+- Milestone releases are strictly gated upon the homeowner physically inspecting and verifying explicit quality checkpoints (e.g. 50mm cover blocks, 14-day wet hessian curing, CPVC 10-bar hydraulic pressure test, and floor tile mallet tap test).
+
+### F. Unused Files
 - The six files matching `frontend/pages/*.py` (`Dashboard.py`, `HousePlanner.py`, `Construction.py`, `Materials.py`, `Reports.py`, `CostEstimation.py`) are legacy Streamlit stubs from an earlier prototype. They are intentionally left untouched and are not used by the React application.
 
 ---
@@ -164,25 +185,34 @@ Execute the complete test suite:
 /Users/narmathan/buildwise/venv/bin/pytest backend/tests
 ```
 **Test Suite Summary:**
-- `test_solver.py`: Deterministic seeds, setback boundary enforcement, room target area tolerances, master bathroom adjacency, and structured conflict reporting on impossible dimensions.
+- `test_realworld_engines.py`: TNCDBR 2019 statutory compliance evaluation (plot coverage <= 70%, FSI, setbacks, RWH recharge sizing), pre-construction & ancillary cost calculations, 8-stage contractor payment escrow with 5% retention fund, district pricing switcher, and bank loan dossier integration.
+- `test_solver.py`: Deterministic seeds, setback boundary enforcement, room target area tolerances, master bathroom adjacency, 4 distinct architectural archetypes, and conflict reporting on impossible dimensions.
 - `test_cost.py`: Quality tier rate scaling, Tamil Nadu location index multipliers, exact 100% sum of the 5-category cost breakdown via largest-remainder rounding.
 - `test_schedule.py`: Discrete-event cash flow simulation, predecessor order verification, monthly burn rate capacity capping, and monotonicity.
 - `test_materials.py`: Thumb-rule calculation, numeric quantities, and purchase status updates.
+- `test_tasks.py`: Day-to-day site checklist operations, task completion toggles, and task postponement (+1 day).
 - `test_auth.py`: Bcrypt registration, login token generation, and `/api/auth/me` profile resolution.
 - `test_api.py`: FastAPI error handler returning single-string `detail` on 422 validation errors, project summary, month stepper, materials patching, custom material creation, and report endpoints.
-- **Result: 22 passed in 1.24s.**
+- **Result: 31 passed in 1.14s.**
 
 ### Building Frontend
 Verify that the production build completes without errors:
 ```bash
 cd /Users/narmathan/buildwise/frontend && npm run build
 ```
-Result: `vite v8.3.3 built client environment in ~250ms with 0 errors`.
+Result: `vite v8.3.3 built client environment in ~200ms with 0 errors`.
 
 ### Screenshot Verification
-Baseline ("before") and post-integration ("after") screenshots covering every view and state in both light and dark themes are cataloged in `docs/screenshots/`:
+Comprehensive visual verification screenshots are cataloged in `docs/screenshots/`:
 - `docs/screenshots/before/`: Baseline captures of all pages prior to code changes.
 - `docs/screenshots/after/`: Full end-to-end integration captures showing live data from the FastAPI backend and SQLite database.
+- `docs/screenshots/realworld_1_planner_compliance.png`: House Planner Step 4 showing TNCDBR 2019 statutory norms and pre-construction ancillary tip.
+- `docs/screenshots/realworld_2_generated_plan.png`: Floor plan with physical dimension callouts (`12'×17' • 202 sq ft`), Vastu compass rose (`N ↑`), TNCDBR compliance badge, and 5% retention estimate.
+- `docs/screenshots/realworld_3_construction_escrow.png`: Construction page Contractor Payment Escrow tab (8 milestone stages, 90-day retention reserve, and inspection gates).
+- `docs/screenshots/realworld_4_construction_quality.png`: Construction page On-Site Quality Protocols tab (5 non-engineer field inspection checks).
+- `docs/screenshots/realworld_5_materials_districts.png`: Materials page Tamil Nadu District Pricing & Daily Wage Rates selector bar.
+- `docs/screenshots/realworld_6_materials_wages_modal.png`: Official Tamil Nadu PWD Schedule of Rates (SOR) 2025–2026 Daily Labor Wage Schedule modal across all 5 districts.
+- `docs/screenshots/realworld_7_reports_bank_dossier.png`: Reports page Institutional Bank Loan & DTCP Sanction Ready Construction Project Dossier.
 
 ---
 
@@ -195,17 +225,29 @@ Baseline ("before") and post-integration ("after") screenshots covering every vi
 | `POST` | `/api/auth/register` | Register new user with bcrypt-hashed credentials |
 | `POST` | `/api/auth/login` | Authenticate user and return JWT bearer token |
 | `GET` | `/api/auth/me` | Fetch active user profile |
-| `POST` | `/api/generate` | Generate candidate floor plans satisfying setbacks |
+| `POST` | `/api/generate` | Generate candidate floor plans satisfying setbacks and archetypes |
 | `POST` | `/api/estimate/affordability` | Live affordability index for Planner Step 3 |
-| `POST` | `/api/estimate/cost` | Comprehensive construction cost breakdown |
+| `POST` | `/api/estimate/cost` | Comprehensive civil construction cost breakdown |
 | `POST` | `/api/estimate/schedule` | Month-by-month cash flow and timeline simulation |
+| `POST` | `/api/estimate/compliance` | TNCDBR 2019 statutory compliance evaluation |
+| `POST` | `/api/estimate/ancillary` | Pre-construction & ancillary packages calculator |
 | `GET` | `/api/projects/current` | Retrieve active project with plans and estimates |
 | `PUT` | `/api/projects/current` | Persist planner requirements and candidate plans |
 | `PUT` | `/api/projects/current/selected-plan` | Select active layout and update dependent estimates |
 | `GET` | `/api/projects/current/summary` | Dashboard summary metrics and timeline status |
 | `GET` | `/api/projects/current/construction?month=n` | Construction stage progress for month `n` with insights |
+| `GET` | `/api/projects/current/milestones` | 8-stage contractor payment escrow schedule and 5% retention fund |
+| `GET` | `/api/projects/current/compliance` | TNCDBR 2019 compliance check for active project |
+| `GET` | `/api/projects/current/ancillary` | Itemized pre-construction ancillary expenses for active project |
 | `GET` | `/api/projects/current/materials` | Materials schedule, categories, and purchase stats |
+| `GET` | `/api/projects/current/materials/districts` | Tamil Nadu district pricing multipliers and PWD SOR labor wages |
+| `GET` | `/api/projects/current/materials/dataset` | Official Tamil Nadu PWD SOR & BAI materials provenance dataset |
+| `GET` | `/api/projects/current/materials/dataset/csv` | Download materials provenance dataset as CSV file |
 | `PATCH`| `/api/projects/current/materials/{id}` | Toggle purchase status or edit quantity/rate |
 | `POST` | `/api/projects/current/materials` | Add custom material to the project schedule |
 | `DELETE`| `/api/projects/current/materials/{id}` | Delete custom material |
-| `GET` | `/api/projects/current/report` | Consolidated report data for printing and review |
+| `GET` | `/api/projects/current/tasks` | Daily construction site task checklist (Days 1–40) |
+| `PATCH`| `/api/projects/current/tasks/{id}` | Mark daily site task complete / incomplete |
+| `POST` | `/api/projects/current/tasks/{id}/postpone` | Postpone task to the next construction day (+1 Day) |
+| `POST` | `/api/projects/current/tasks` | Create custom day task |
+| `GET` | `/api/projects/current/report` | Bank Loan & DTCP Sanction Ready Construction Project Dossier |
