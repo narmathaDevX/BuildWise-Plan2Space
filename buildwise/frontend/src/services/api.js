@@ -1,0 +1,514 @@
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
+export async function request(endpoint, options = {}) {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+  };
+
+  const token = localStorage.getItem("buildwise_token");
+  if (token && !headers["Authorization"]) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  let data = null;
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+  }
+
+  if (!response.ok) {
+    let errorMsg = "An unexpected error occurred.";
+    if (data) {
+      if (typeof data.detail === "string") {
+        errorMsg = data.detail;
+      } else if (Array.isArray(data.detail)) {
+        errorMsg = data.detail.map((d) => d.msg || JSON.stringify(d)).join("; ");
+      } else if (data.message) {
+        errorMsg = data.message;
+      }
+    }
+    const err = new Error(errorMsg);
+    err.status = response.status;
+    err.data = data;
+    throw err;
+  }
+
+  return data;
+}
+
+/* ============================================================
+   CAMELCASE <-> SNAKE_CASE FORM CONVERTERS
+============================================================ */
+
+export function plannerFormToBackend(form) {
+  if (!form) return {};
+  return {
+    plot_width: Number(form.width || 40),
+    plot_depth: Number(form.length || 60),
+    facing: String(form.facing || "North"),
+    location: String(form.location || "Tamil Nadu"),
+    bedrooms: Number(form.bedrooms || 3),
+    bathrooms: Number(form.bathrooms || 2),
+    floors: Number(form.floors || 1),
+    parking: Boolean(form.parking),
+    balcony: Boolean(form.balcony),
+    pooja: Boolean(form.pooja),
+    utility: Boolean(form.utility),
+    budget: Number(form.budget || 3500000),
+    monthly_budget: Number(form.monthlyBudget || 300000),
+    quality: String(form.quality || "Standard"),
+  };
+}
+
+export function plannerFormFromBackend(data) {
+  if (!data) return null;
+  return {
+    width: Number(data.width || data.plot_width || 40),
+    length: Number(data.length || data.plot_depth || 60),
+    facing: String(data.facing || "North"),
+    location: String(data.location || "Tamil Nadu"),
+    bedrooms: Number(data.bedrooms || 3),
+    bathrooms: Number(data.bathrooms || 2),
+    floors: Number(data.floors || 1),
+    parking: data.parking !== undefined ? Boolean(data.parking) : true,
+    balcony: data.balcony !== undefined ? Boolean(data.balcony) : true,
+    pooja: Boolean(data.pooja),
+    utility: data.utility !== undefined ? Boolean(data.utility) : true,
+    budget: Number(data.budget || 3500000),
+    monthlyBudget: Number(data.monthlyBudget || data.monthly_budget || 300000),
+    quality: String(data.quality || "Standard"),
+  };
+}
+
+/* ============================================================
+   API ENDPOINT CLIENT METHODS
+============================================================ */
+
+export async function getHealth() {
+  return request("/api/health");
+}
+
+export async function getMlStatus() {
+  return request("/api/ml/status");
+}
+
+export async function estimateAffordability(form) {
+  const payload = plannerFormToBackend(form);
+  return request("/api/estimate/affordability", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function estimateCost(params) {
+  return request("/api/estimate/cost", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
+
+export async function estimateSchedule(params) {
+  return request("/api/estimate/schedule", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
+
+export async function getCurrentProject() {
+  return request("/api/projects/current");
+}
+
+export async function saveCurrentProject(payload) {
+  return request("/api/projects/current", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function selectProjectPlan(planId) {
+  return request("/api/projects/current/selected-plan", {
+    method: "PUT",
+    body: JSON.stringify({ plan_id: planId }),
+  });
+}
+
+export const selectCurrentProjectPlan = selectProjectPlan;
+
+export async function getProjectSummary() {
+  return request("/api/projects/current/summary");
+}
+
+export async function getProjectConstruction(month = 1) {
+  return request(`/api/projects/current/construction?month=${month}`);
+}
+
+export async function getProjectReport() {
+  return request("/api/projects/current/report");
+}
+
+export async function getProjectMaterials() {
+  return request("/api/projects/current/materials");
+}
+
+export async function updateMaterial(id, patch) {
+  return request(`/api/projects/current/materials/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+}
+
+export async function addCustomMaterial(material) {
+  return request("/api/projects/current/materials", {
+    method: "POST",
+    body: JSON.stringify(material),
+  });
+}
+
+export async function deleteCustomMaterial(id) {
+  return request(`/api/projects/current/materials/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getProjectTasks(day = null) {
+  const url = day !== null && day !== undefined
+    ? `/api/projects/current/tasks?day=${day}`
+    : "/api/projects/current/tasks";
+  return request(url);
+}
+
+export async function updateProjectTask(id, patch) {
+  return request(`/api/projects/current/tasks/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+}
+
+export async function postponeProjectTask(id) {
+  return request(`/api/projects/current/tasks/${id}/postpone`, {
+    method: "POST",
+  });
+}
+
+export async function createProjectTask(task) {
+  return request("/api/projects/current/tasks", {
+    method: "POST",
+    body: JSON.stringify(task),
+  });
+}
+
+export async function editProjectTask(id, data) {
+  return request(`/api/projects/current/tasks/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteProjectTask(id) {
+  return request(`/api/projects/current/tasks/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function regenerateProjectTasks() {
+  return request("/api/projects/current/tasks/regenerate", {
+    method: "POST",
+  });
+}
+
+export async function loginUser(email, password) {
+  const data = await request("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+  if (data?.access_token) {
+    localStorage.setItem("buildwise_token", data.access_token);
+  }
+  return data;
+}
+
+export async function registerUser(email, password, name = "Builder") {
+  const data = await request("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ email, password, name }),
+  });
+  if (data?.access_token) {
+    localStorage.setItem("buildwise_token", data.access_token);
+  }
+  return data;
+}
+
+export async function getMe() {
+  return request("/api/auth/me");
+}
+
+export async function getMaterialsDataset() {
+  return request("/api/projects/current/materials/dataset");
+}
+
+export function getMaterialsCsvUrl() {
+  return `${API_BASE_URL}/api/projects/current/materials/dataset/csv`;
+}
+
+export async function getTncdbrCompliance(params = null) {
+  if (params) {
+    return request("/api/estimate/compliance", {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
+  }
+  return request("/api/projects/current/compliance");
+}
+
+export async function getAncillaryCosts(params = null) {
+  if (params) {
+    return request("/api/estimate/ancillary", {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
+  }
+  return request("/api/projects/current/ancillary");
+}
+
+export async function getProjectMilestones() {
+  return request("/api/projects/current/milestones");
+}
+
+export async function getTnDistrictRates() {
+  return request("/api/projects/current/materials/districts");
+}
+
+/* ============================================================
+   SAVED PLANS & ARCHITECTURAL PORTFOLIO
+============================================================ */
+
+export async function getSavedPlans() {
+  return request("/api/plans/saved");
+}
+
+export async function saveLikedPlan({
+  planId,
+  title,
+  notes = "",
+  plan,
+  form,
+  builtUpArea = null,
+  estimatedCost = null,
+  score = null,
+}) {
+  return request("/api/plans/saved", {
+    method: "POST",
+    body: JSON.stringify({
+      plan_id: planId,
+      title,
+      notes,
+      plan,
+      form,
+      built_up_area: builtUpArea,
+      estimated_cost: estimatedCost,
+      score,
+    }),
+  });
+}
+
+export async function updateSavedPlan(id, { title, notes }) {
+  return request(`/api/plans/saved/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ title, notes }),
+  });
+}
+
+export async function deleteSavedPlan(id) {
+  return request(`/api/plans/saved/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getSavedPlanById(id) {
+  return request(`/api/plans/saved/${id}`);
+}
+
+/* ============================================================
+   AI PLAN ADVISOR & RANKING ENDPOINTS
+============================================================ */
+
+export async function getPlanSummary({
+  planId,
+  language = "en",
+  audience = "homeowner",
+  planData = null,
+  formData = null,
+}) {
+  return request("/api/assistant/summarize", {
+    method: "POST",
+    body: JSON.stringify({
+      plan_id: planId,
+      language,
+      audience,
+      plan_data: planData,
+      form_data: formData,
+    }),
+  });
+}
+
+export async function explainPlanRanking({ plans, form, language = "en" }) {
+  return request("/api/assistant/explain-ranking", {
+    method: "POST",
+    body: JSON.stringify({ plans, form, language }),
+  });
+}
+
+export async function rankPlans({ plans, form, preset = "Balanced" }) {
+  return request("/api/plans/rank", {
+    method: "POST",
+    body: JSON.stringify({ plans, form, preset }),
+  });
+}
+
+export async function getPlanWalkthrough({
+  planId = "active",
+  language = "en",
+  planData = null,
+  formData = null,
+}) {
+  return request("/api/assistant/walkthrough", {
+    method: "POST",
+    body: JSON.stringify({
+      plan_id: planId,
+      language,
+      plan_data: planData,
+      form_data: formData,
+    }),
+  });
+}
+
+export async function modifyPlanWithAI({
+  instruction,
+  currentForm,
+  currentPlan = null,
+  language = "en",
+}) {
+  return request("/api/assistant/modify-plan", {
+    method: "POST",
+    body: JSON.stringify({
+      instruction,
+      current_form: currentForm,
+      current_plan: currentPlan,
+      language,
+    }),
+  });
+}
+
+/* ============================================================
+   BRANDING & SHAREABLE CLIENT LINKS
+============================================================ */
+
+export async function getBranding() {
+  return request("/api/projects/current/branding");
+}
+
+export async function updateBranding(payload) {
+  return request("/api/projects/current/branding", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function createShareLink(planId = null) {
+  const url = planId ? `/api/projects/current/share?plan_id=${encodeURIComponent(planId)}` : "/api/projects/current/share";
+  return request(url, { method: "POST" });
+}
+
+export async function getPublicShareLink(token) {
+  return request(`/api/projects/public/share/${token}`);
+}
+
+export async function streamPlanChat({
+  planId,
+  message,
+  language = "en",
+  history = [],
+  planData = null,
+  formData = null,
+  onChunk,
+  onError,
+  onDone,
+}) {
+  const token = localStorage.getItem("buildwise_token");
+  const headers = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  try {
+    const response = await fetch("/api/assistant/chat", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        plan_id: planId,
+        message,
+        language,
+        history,
+        plan_data: planData,
+        form_data: formData,
+      }),
+    });
+
+    if (!response.ok) {
+      const errJson = await response.json().catch(() => ({}));
+      throw new Error(errJson.detail || `Server returned ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop(); // keep remainder
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("data: ")) {
+          const payloadStr = trimmed.slice(6);
+          if (payloadStr === "[DONE]") {
+            if (onDone) onDone();
+            return;
+          }
+          try {
+            const parsed = JSON.parse(payloadStr);
+            if (parsed.chunk !== undefined) {
+              onChunk(parsed.chunk);
+            } else if (parsed.text !== undefined) {
+              onChunk(parsed.text);
+            }
+          } catch {
+            onChunk(payloadStr);
+          }
+        }
+      }
+    }
+    if (onDone) onDone();
+  } catch (err) {
+    if (onError) onError(err);
+    else throw err;
+  }
+}
+

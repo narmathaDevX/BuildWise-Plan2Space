@@ -1,0 +1,1165 @@
+{
+  "id": "fp_24844e18",
+  "name": "BuildWise: Layout A: Traditional Vastu Courtyard Layout",
+  "geometry": {
+    "id": "fp_24844e18",
+    "name": "BuildWise: Layout A: Traditional Vastu Courtyard Layout",
+    "walls": [
+      {
+        "id": "w_bw_0_0",
+        "start": {
+          "x": 0.914,
+          "y": 1.524
+        },
+        "end": {
+          "x": 3.81,
+          "y": 1.524
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_0_1",
+        "start": {
+          "x": 3.81,
+          "y": 1.524
+        },
+        "end": {
+          "x": 3.81,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_0_2",
+        "start": {
+          "x": 3.81,
+          "y": 6.459
+        },
+        "end": {
+          "x": 0.914,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_0_3",
+        "start": {
+          "x": 0.914,
+          "y": 6.459
+        },
+        "end": {
+          "x": 0.914,
+          "y": 1.524
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_1_0",
+        "start": {
+          "x": 3.81,
+          "y": 1.524
+        },
+        "end": {
+          "x": 5.791,
+          "y": 1.524
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_1_1",
+        "start": {
+          "x": 5.791,
+          "y": 1.524
+        },
+        "end": {
+          "x": 5.791,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_1_2",
+        "start": {
+          "x": 5.791,
+          "y": 6.459
+        },
+        "end": {
+          "x": 3.81,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_1_3",
+        "start": {
+          "x": 3.81,
+          "y": 6.459
+        },
+        "end": {
+          "x": 3.81,
+          "y": 1.524
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_2_0",
+        "start": {
+          "x": 5.791,
+          "y": 1.524
+        },
+        "end": {
+          "x": 11.277,
+          "y": 1.524
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_2_1",
+        "start": {
+          "x": 11.277,
+          "y": 1.524
+        },
+        "end": {
+          "x": 11.277,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_2_2",
+        "start": {
+          "x": 11.277,
+          "y": 6.459
+        },
+        "end": {
+          "x": 5.791,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_2_3",
+        "start": {
+          "x": 5.791,
+          "y": 6.459
+        },
+        "end": {
+          "x": 5.791,
+          "y": 1.524
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_3_0",
+        "start": {
+          "x": 0.914,
+          "y": 6.459
+        },
+        "end": {
+          "x": 2.59,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_3_1",
+        "start": {
+          "x": 2.59,
+          "y": 6.459
+        },
+        "end": {
+          "x": 2.59,
+          "y": 9.05
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_3_2",
+        "start": {
+          "x": 2.59,
+          "y": 9.05
+        },
+        "end": {
+          "x": 0.914,
+          "y": 9.05
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_3_3",
+        "start": {
+          "x": 0.914,
+          "y": 9.05
+        },
+        "end": {
+          "x": 0.914,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_4_0",
+        "start": {
+          "x": 0.914,
+          "y": 9.05
+        },
+        "end": {
+          "x": 2.59,
+          "y": 9.05
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_4_1",
+        "start": {
+          "x": 2.59,
+          "y": 9.05
+        },
+        "end": {
+          "x": 2.59,
+          "y": 11.946
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_4_2",
+        "start": {
+          "x": 2.59,
+          "y": 11.946
+        },
+        "end": {
+          "x": 0.914,
+          "y": 11.946
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_4_3",
+        "start": {
+          "x": 0.914,
+          "y": 11.946
+        },
+        "end": {
+          "x": 0.914,
+          "y": 9.05
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_5_0",
+        "start": {
+          "x": 2.591,
+          "y": 6.459
+        },
+        "end": {
+          "x": 6.249,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_5_1",
+        "start": {
+          "x": 6.249,
+          "y": 6.459
+        },
+        "end": {
+          "x": 6.249,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_5_2",
+        "start": {
+          "x": 6.249,
+          "y": 11.945
+        },
+        "end": {
+          "x": 2.591,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_5_3",
+        "start": {
+          "x": 2.591,
+          "y": 11.945
+        },
+        "end": {
+          "x": 2.591,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_6_0",
+        "start": {
+          "x": 6.248,
+          "y": 6.459
+        },
+        "end": {
+          "x": 9.467,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_6_1",
+        "start": {
+          "x": 9.467,
+          "y": 6.459
+        },
+        "end": {
+          "x": 9.467,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_6_2",
+        "start": {
+          "x": 9.467,
+          "y": 11.945
+        },
+        "end": {
+          "x": 6.248,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_6_3",
+        "start": {
+          "x": 6.248,
+          "y": 11.945
+        },
+        "end": {
+          "x": 6.248,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_7_0",
+        "start": {
+          "x": 9.467,
+          "y": 6.459
+        },
+        "end": {
+          "x": 11.278,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_7_1",
+        "start": {
+          "x": 11.278,
+          "y": 6.459
+        },
+        "end": {
+          "x": 11.278,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_7_2",
+        "start": {
+          "x": 11.278,
+          "y": 11.945
+        },
+        "end": {
+          "x": 9.467,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_7_3",
+        "start": {
+          "x": 9.467,
+          "y": 11.945
+        },
+        "end": {
+          "x": 9.467,
+          "y": 6.459
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_8_0",
+        "start": {
+          "x": 0.914,
+          "y": 11.945
+        },
+        "end": {
+          "x": 4.267,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_8_1",
+        "start": {
+          "x": 4.267,
+          "y": 11.945
+        },
+        "end": {
+          "x": 4.267,
+          "y": 17.373
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_8_2",
+        "start": {
+          "x": 4.267,
+          "y": 17.373
+        },
+        "end": {
+          "x": 0.914,
+          "y": 17.373
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_8_3",
+        "start": {
+          "x": 0.914,
+          "y": 17.373
+        },
+        "end": {
+          "x": 0.914,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_9_0",
+        "start": {
+          "x": 4.267,
+          "y": 11.945
+        },
+        "end": {
+          "x": 6.096,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_9_1",
+        "start": {
+          "x": 6.096,
+          "y": 11.945
+        },
+        "end": {
+          "x": 6.096,
+          "y": 14.536
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_9_2",
+        "start": {
+          "x": 6.096,
+          "y": 14.536
+        },
+        "end": {
+          "x": 4.267,
+          "y": 14.536
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_9_3",
+        "start": {
+          "x": 4.267,
+          "y": 14.536
+        },
+        "end": {
+          "x": 4.267,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_10_0",
+        "start": {
+          "x": 4.267,
+          "y": 14.536
+        },
+        "end": {
+          "x": 6.096,
+          "y": 14.536
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_10_1",
+        "start": {
+          "x": 6.096,
+          "y": 14.536
+        },
+        "end": {
+          "x": 6.096,
+          "y": 17.374
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_10_2",
+        "start": {
+          "x": 6.096,
+          "y": 17.374
+        },
+        "end": {
+          "x": 4.267,
+          "y": 17.374
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_10_3",
+        "start": {
+          "x": 4.267,
+          "y": 17.374
+        },
+        "end": {
+          "x": 4.267,
+          "y": 14.536
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_11_0",
+        "start": {
+          "x": 6.096,
+          "y": 11.945
+        },
+        "end": {
+          "x": 8.687,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_11_1",
+        "start": {
+          "x": 8.687,
+          "y": 11.945
+        },
+        "end": {
+          "x": 8.687,
+          "y": 17.373
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_11_2",
+        "start": {
+          "x": 8.687,
+          "y": 17.373
+        },
+        "end": {
+          "x": 6.096,
+          "y": 17.373
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_11_3",
+        "start": {
+          "x": 6.096,
+          "y": 17.373
+        },
+        "end": {
+          "x": 6.096,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_12_0",
+        "start": {
+          "x": 8.687,
+          "y": 11.945
+        },
+        "end": {
+          "x": 11.278,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_12_1",
+        "start": {
+          "x": 11.278,
+          "y": 11.945
+        },
+        "end": {
+          "x": 11.278,
+          "y": 17.373
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_12_2",
+        "start": {
+          "x": 11.278,
+          "y": 17.373
+        },
+        "end": {
+          "x": 8.687,
+          "y": 17.373
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      },
+      {
+        "id": "w_bw_12_3",
+        "start": {
+          "x": 8.687,
+          "y": 17.373
+        },
+        "end": {
+          "x": 8.687,
+          "y": 11.945
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "measured"
+      }
+    ],
+    "openings": [
+      {
+        "id": "op_main",
+        "wall_id": "w_bw_0_0",
+        "type": "door",
+        "position_along_wall": 1.0,
+        "width": 1.0,
+        "height": 2.1,
+        "sill_height": 0.0,
+        "source": "default"
+      }
+    ],
+    "rooms": [
+      {
+        "id": "rm_parking",
+        "name": "Car Parking",
+        "polygon": [
+          {
+            "x": 0.914,
+            "y": 1.524
+          },
+          {
+            "x": 3.81,
+            "y": 1.524
+          },
+          {
+            "x": 3.81,
+            "y": 6.459
+          },
+          {
+            "x": 0.914,
+            "y": 6.459
+          }
+        ],
+        "area_sqm": 14.29,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      },
+      {
+        "id": "rm_balcony",
+        "name": "Front Balcony / Sit-Out",
+        "polygon": [
+          {
+            "x": 3.81,
+            "y": 1.524
+          },
+          {
+            "x": 5.791,
+            "y": 1.524
+          },
+          {
+            "x": 5.791,
+            "y": 6.459
+          },
+          {
+            "x": 3.81,
+            "y": 6.459
+          }
+        ],
+        "area_sqm": 9.78,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      },
+      {
+        "id": "rm_living",
+        "name": "Family Living Room",
+        "polygon": [
+          {
+            "x": 5.791,
+            "y": 1.524
+          },
+          {
+            "x": 11.277,
+            "y": 1.524
+          },
+          {
+            "x": 11.277,
+            "y": 6.459
+          },
+          {
+            "x": 5.791,
+            "y": 6.459
+          }
+        ],
+        "area_sqm": 27.07,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      },
+      {
+        "id": "rm_bathroom_1",
+        "name": "Common Bathroom",
+        "polygon": [
+          {
+            "x": 0.914,
+            "y": 6.459
+          },
+          {
+            "x": 2.59,
+            "y": 6.459
+          },
+          {
+            "x": 2.59,
+            "y": 9.05
+          },
+          {
+            "x": 0.914,
+            "y": 9.05
+          }
+        ],
+        "area_sqm": 4.34,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      },
+      {
+        "id": "rm_wash_alcove",
+        "name": "Handwash & Linen Alcove",
+        "polygon": [
+          {
+            "x": 0.914,
+            "y": 9.05
+          },
+          {
+            "x": 2.59,
+            "y": 9.05
+          },
+          {
+            "x": 2.59,
+            "y": 11.946
+          },
+          {
+            "x": 0.914,
+            "y": 11.946
+          }
+        ],
+        "area_sqm": 4.85,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      },
+      {
+        "id": "rm_dining",
+        "name": "Family Dining Hall",
+        "polygon": [
+          {
+            "x": 2.591,
+            "y": 6.459
+          },
+          {
+            "x": 6.249,
+            "y": 6.459
+          },
+          {
+            "x": 6.249,
+            "y": 11.945
+          },
+          {
+            "x": 2.591,
+            "y": 11.945
+          }
+        ],
+        "area_sqm": 20.07,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      },
+      {
+        "id": "rm_kitchen",
+        "name": "Modular Kitchen",
+        "polygon": [
+          {
+            "x": 6.248,
+            "y": 6.459
+          },
+          {
+            "x": 9.467,
+            "y": 6.459
+          },
+          {
+            "x": 9.467,
+            "y": 11.945
+          },
+          {
+            "x": 6.248,
+            "y": 11.945
+          }
+        ],
+        "area_sqm": 17.66,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      },
+      {
+        "id": "rm_utility",
+        "name": "Utility Area",
+        "polygon": [
+          {
+            "x": 9.467,
+            "y": 6.459
+          },
+          {
+            "x": 11.278,
+            "y": 6.459
+          },
+          {
+            "x": 11.278,
+            "y": 11.945
+          },
+          {
+            "x": 9.467,
+            "y": 11.945
+          }
+        ],
+        "area_sqm": 9.94,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      },
+      {
+        "id": "rm_master",
+        "name": "Master Bedroom",
+        "polygon": [
+          {
+            "x": 0.914,
+            "y": 11.945
+          },
+          {
+            "x": 4.267,
+            "y": 11.945
+          },
+          {
+            "x": 4.267,
+            "y": 17.373
+          },
+          {
+            "x": 0.914,
+            "y": 17.373
+          }
+        ],
+        "area_sqm": 18.2,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      },
+      {
+        "id": "rm_master_bath",
+        "name": "Master Attached Bath",
+        "polygon": [
+          {
+            "x": 4.267,
+            "y": 11.945
+          },
+          {
+            "x": 6.096,
+            "y": 11.945
+          },
+          {
+            "x": 6.096,
+            "y": 14.536
+          },
+          {
+            "x": 4.267,
+            "y": 14.536
+          }
+        ],
+        "area_sqm": 4.74,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      },
+      {
+        "id": "rm_master_dress",
+        "name": "Master Dressing Suite",
+        "polygon": [
+          {
+            "x": 4.267,
+            "y": 14.536
+          },
+          {
+            "x": 6.096,
+            "y": 14.536
+          },
+          {
+            "x": 6.096,
+            "y": 17.374
+          },
+          {
+            "x": 4.267,
+            "y": 17.374
+          }
+        ],
+        "area_sqm": 5.19,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      },
+      {
+        "id": "rm_bedroom_2",
+        "name": "Bedroom 2",
+        "polygon": [
+          {
+            "x": 6.096,
+            "y": 11.945
+          },
+          {
+            "x": 8.687,
+            "y": 11.945
+          },
+          {
+            "x": 8.687,
+            "y": 17.373
+          },
+          {
+            "x": 6.096,
+            "y": 17.373
+          }
+        ],
+        "area_sqm": 14.06,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      },
+      {
+        "id": "rm_bedroom_3",
+        "name": "Bedroom 3",
+        "polygon": [
+          {
+            "x": 8.687,
+            "y": 11.945
+          },
+          {
+            "x": 11.278,
+            "y": 11.945
+          },
+          {
+            "x": 11.278,
+            "y": 17.373
+          },
+          {
+            "x": 8.687,
+            "y": 17.373
+          }
+        ],
+        "area_sqm": 14.06,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      }
+    ],
+    "scale": {
+      "pixels_per_metre": 50.0,
+      "source": "measured",
+      "reference_length_m": null,
+      "reference_pixels": null,
+      "confidence": 1.0,
+      "warning": null
+    },
+    "roof": {
+      "type": "none",
+      "thickness": 0.15,
+      "pitch_deg": 15.0,
+      "overhang": 0.3
+    },
+    "image_path": null,
+    "image_width_px": null,
+    "image_height_px": null,
+    "bounding_box": null,
+    "metadata": {}
+  },
+  "image_url": null,
+  "warnings": [],
+  "created_at": "2026-10-16T15:23:07.964259+00:00",
+  "updated_at": "2026-10-16T15:23:07.966627+00:00"
+}

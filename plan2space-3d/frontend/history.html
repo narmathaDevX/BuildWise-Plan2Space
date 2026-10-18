@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plan2Space 3D — Saved Plans, Materials & Cost Estimation</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/studio.css">
+  <style>
+    :root {
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #24344d;
+      --border-card: #334155;
+      --text-pri: #f8fafc;
+      --text-sec: #94a3b8;
+      --accent: #38bdf8;
+      --accent-rgb: 56, 189, 248;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --purple: #a855f7;
+    }
+
+    body.theme-light {
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f1f5f9;
+      --border-card: #e2e8f0;
+      --text-pri: #0f172a;
+      --text-sec: #64748b;
+      --accent: #0284c7;
+      --accent-rgb: 2, 132, 199;
+      --success: #059669;
+      --warning: #d97706;
+      --purple: #9333ea;
+    }
+
+    body {
+      background: var(--bg-page);
+      color: var(--text-pri);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .history-header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-card);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .nav-links-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-pill-link {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-sec);
+      text-decoration: none;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-pill-link:hover {
+      color: var(--text-pri);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-pill-link.active {
+      color: var(--accent);
+      background: rgba(var(--accent-rgb), 0.12);
+      font-weight: 600;
+    }
+
+    .history-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+      width: 100%;
+      box-sizing: border-box;
+      flex: 1;
+    }
+
+    /* Top Stats Grid */
+    .stats-overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent);
+    }
+
+    .stat-metric-card.green::before { background: var(--success); }
+    .stat-metric-card.purple::before { background: var(--purple); }
+    .stat-metric-card.amber::before { background: var(--warning); }
+
+    .stat-metric-card .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-sec);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-metric-card .stat-val {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-pri);
+    }
+
+    .stat-metric-card .stat-sub {
+      font-size: 0.75rem;
+      color: var(--text-sec);
+    }
+
+    /* Toolbar: Search, Filters, Currency */
+    .filter-toolbar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .search-input-wrapper input {
+      width: 100%;
+      background: var(--bg-page);
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      padding: 8px 12px 8px 34px;
+      color: var(--text-pri);
+      font-size: 0.85rem;
+      box-sizing: border-box;
+    }
+
+    .search-input-wrapper .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-sec);
+    }
+
+    .filter-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .segmented-control {
+      display: inline-flex;
+      background: var(--bg-page);
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      padding: 2px;
+    }
+
+    .segmented-control button {
+      background: none;
+      border: none;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      color: var(--text-sec);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .segmented-control button.active {
+      background: var(--bg-card);
+      color: var(--text-pri);
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* Plans Grid */
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 20px;
+    }
+
+    .plan-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      position: relative;
+    }
+
+    .plan-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      border-color: rgba(var(--accent-rgb), 0.4);
+    }
+
+    .plan-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .plan-title-area h3 {
+      margin: 0 0 4px 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-pri);
+    }
+
+    .plan-id-badge {
+      font-size: 0.7rem;
+      font-family: monospace;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-sec);
+    }
+
+    .plan-cost-banner {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(56, 189, 248, 0.08));
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cost-main .cost-label {
+      font-size: 0.7rem;
+      color: var(--success);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .cost-main .cost-figure {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-pri);
+    }
+
+    .cost-unit-rate {
+      font-size: 0.75rem;
+      color: var(--text-sec);
+      text-align: right;
+    }
+
+    .plan-specs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      background: var(--bg-page);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .spec-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .spec-item .spec-val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-pri);
+    }
+
+    .spec-item .spec-lbl {
+      font-size: 0.7rem;
+      color: var(--text-sec);
+    }
+
+    .badges-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag-badge {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-card);
+      color: var(--text-sec);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tag-badge.roof-tiles {
+      background: rgba(194, 65, 12, 0.15);
+      border-color: rgba(194, 65, 12, 0.35);
+      color: #fb923c;
+    }
+
+    .tag-badge.roof-plain {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: rgba(56, 189, 248, 0.35);
+      color: #38bdf8;
+    }
+
+    .tag-badge.furniture-active {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: rgba(168, 85, 247, 0.35);
+      color: #c084fc;
+    }
+
+    .plan-actions-footer {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-card);
+    }
+
+    .plan-actions-footer button,
+    .plan-actions-footer a {
+      flex: 1;
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 6px;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .btn-estimate {
+      background: rgba(var(--accent-rgb), 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(var(--accent-rgb), 0.35);
+    }
+    .btn-estimate:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-studio {
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      color: white;
+      border: none;
+    }
+    .btn-studio:hover {
+      opacity: 0.9;
+    }
+
+    .btn-del {
+      flex: 0 0 auto !important;
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      padding: 8px 10px;
+    }
+    .btn-del:hover {
+      background: #ef4444;
+      color: white;
+    }
+
+    /* Modal Overlay & Dialog */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-dialog {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-card);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .modal-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-card);
+      background: var(--bg-page);
+    }
+
+    .modal-tab-btn {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      color: var(--text-sec);
+      font-weight: 500;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .modal-tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      font-weight: 600;
+      background: var(--bg-card);
+    }
+
+    .modal-body {
+      padding: 20px 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* BoQ Table */
+    .boq-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .boq-table th {
+      text-align: left;
+      padding: 10px 12px;
+      background: var(--bg-page);
+      color: var(--text-sec);
+      border-bottom: 1px solid var(--border-card);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .boq-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-card);
+      color: var(--text-pri);
+    }
+
+    .boq-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .boq-table .cat-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-sec);
+    }
+
+    .modal-footer {
+      padding: 14px 24px;
+      border-top: 1px solid var(--border-card);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-page);
+    }
+
+    /* Print View Styles */
+    @media print {
+      body { background: white !important; color: black !important; }
+      .history-header, .filter-toolbar, .stats-overview-grid, .modal-footer, .modal-tabs { display: none !important; }
+      .modal-dialog { border: none !important; box-shadow: none !important; max-width: 100% !important; max-height: none !important; }
+      .boq-table th, .boq-table td { border-color: #ccc !important; color: black !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Navigation Header -->
+  <header class="history-header">
+    <div style="display:flex; align-items:center; gap: 20px;">
+      <a href="/index.html" class="brand-group">
+        <span style="font-size:1.5rem;">🏠</span>
+        <div>
+          <strong style="font-size:1rem; display:block;">Plan2Space 3D</strong>
+          <span style="font-size:0.75rem; color:var(--text-sec);">Deterministic 2D to 3D Conversion</span>
+        </div>
+      </a>
+
+      <nav class="nav-links-group">
+        <a href="/index.html" class="nav-pill-link">📐 2D Editor & 3D Viewer</a>
+        <a href="/studio.html" class="nav-pill-link" id="nav-link-studio">🛋️ Interior Design Studio</a>
+        <a href="/history.html" class="nav-pill-link active">📁 Saved Plans & Estimates</a>
+      </nav>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div class="segmented-control">
+        <button type="button" class="currency-toggle-btn active" data-curr="INR">₹ INR</button>
+        <button type="button" class="currency-toggle-btn" data-curr="USD">$ USD</button>
+      </div>
+
+      <button type="button" class="btn btn-sm btn-secondary" id="btn-toggle-theme" title="Toggle Light/Dark Theme">
+        🌓 Theme
+      </button>
+
+      <a href="/index.html" class="btn btn-sm btn-primary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+        ➕ New Plan / Upload
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="history-container">
+    <!-- Top Statistics Banner -->
+    <div class="stats-overview-grid">
+      <div class="stat-metric-card">
+        <span class="stat-label">Total Saved Plans</span>
+        <span class="stat-val" id="total-plans-count">0</span>
+        <span class="stat-sub">Architectural Floor Plans in DB</span>
+      </div>
+
+      <div class="stat-metric-card green">
+        <span class="stat-label">Total Built-Up Area</span>
+        <span class="stat-val" id="total-area-display">0 m²</span>
+        <span class="stat-sub" id="total-area-sqft">0 sq.ft</span>
+      </div>
+
+      <div class="stat-metric-card amber">
+        <span class="stat-label">Portfolio Cost Estimate</span>
+        <span class="stat-val" id="total-cost-display">₹0</span>
+        <span class="stat-sub">Civil Structure + Finishes + Furniture</span>
+      </div>
+
+      <div class="stat-metric-card purple">
+        <span class="stat-label">Furnishings & Fixtures</span>
+        <span class="stat-val" id="total-furniture-count">0</span>
+        <span class="stat-sub">3D Objects Styled in Studio</span>
+      </div>
+    </div>
+
+    <!-- Toolbar: Search, Filter, Sort -->
+    <div class="filter-toolbar">
+      <div class="search-input-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="input-search-plans" placeholder="Search by plan name, room, or ID...">
+      </div>
+
+      <div class="filter-actions">
+        <div class="segmented-control">
+          <button type="button" class="filter-btn active" data-filter="all">All Plans</button>
+          <button type="button" class="filter-btn" data-filter="3d">With 3D Model</button>
+          <button type="button" class="filter-btn" data-filter="designed">Studio Styled</button>
+        </div>
+
+        <select id="select-sort" class="form-select" style="background:var(--bg-page); color:var(--text-pri); border:1px solid var(--border-card); border-radius:6px; padding:6px 10px; font-size:0.8rem;">
+          <option value="newest">Sort: Newest First</option>
+          <option value="area_desc">Sort: Largest Area</option>
+          <option value="cost_desc">Sort: Highest Cost</option>
+          <option value="name_asc">Sort: Name (A-Z)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Empty State Container -->
+    <div id="plans-empty-state" style="display:none; text-align:center; padding: 60px 20px; background:var(--bg-card); border:1px dashed var(--border-card); border-radius:12px;">
+      <span style="font-size:3rem; display:block; margin-bottom:12px;">📂</span>
+      <h3 style="margin:0 0 8px 0;">No Saved Floor Plans Found</h3>
+      <p style="color:var(--text-sec); max-width:440px; margin:0 auto 20px auto; font-size:0.9rem;">
+        Upload a floor plan image or load one of our architectural samples to start converting into 3D and estimating materials and costs.
+      </p>
+      <a href="/index.html" class="btn btn-primary" style="text-decoration:none;">
+        🚀 Go to 2D/3D Builder
+      </a>
+    </div>
+
+    <!-- Plans Cards Grid -->
+    <div class="plans-grid" id="plans-grid-container">
+      <!-- Dynamically rendered plan cards -->
+    </div>
+  </main>
+
+  <!-- Materials & Cost Estimate Modal -->
+  <div class="modal-overlay" id="estimate-modal" style="display:none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <h2 id="modal-plan-title">Plan Name — Materials & Cost Estimate</h2>
+          <span style="font-size:0.75rem; color:var(--text-sec);" id="modal-plan-subtitle">Conversion ID • Area</span>
+        </div>
+        <button type="button" class="btn-sm btn-secondary" id="modal-btn-close" style="font-size:1.1rem; padding:4px 8px; cursor:pointer;">✕</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button type="button" class="modal-tab-btn active" data-tab="tab-boq">📋 Bill of Quantities (BoQ)</button>
+        <button type="button" class="modal-tab-btn" data-tab="tab-breakdown">📊 Cost Distribution</button>
+        <button type="button" class="modal-tab-btn" data-tab="tab-rooms">🛋️ Rooms & Placed Furniture</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- TAB 1: Bill of Quantities Table -->
+        <div id="tab-boq" class="modal-tab-content">
+          <table class="boq-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Material / Item Description</th>
+                <th>Required Qty</th>
+                <th>Unit</th>
+                <th>Unit Rate</th>
+                <th>Estimated Total</th>
+              </tr>
+            </thead>
+            <tbody id="boq-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TAB 2: Cost Breakdown -->
+        <div id="tab-breakdown" class="modal-tab-content" style="display:none;">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:20px;">
+            <div style="background:var(--bg-page); padding:16px; border-radius:8px; border:1px solid var(--border-card);">
+              <span style="font-size:0.75rem; color:var(--text-sec); display:block;">Civil & Structural Materials</span>
+              <strong style="font-size:1.3rem; color:var(--text-pri);" id="breakdown-materials">₹0</strong>
+            </div>
+            <div style="background:var(--bg-page); padding:16px; border-radius:8px; border:1px solid var(--border-card);">
+              <span style="font-size:0.75rem; color:var(--text-sec); display:block;">Labor & Construction Execution</span>
+              <strong style="font-size:1.3rem; color:var(--text-pri);" id="breakdown-labor">₹0</strong>
+            </div>
+            <div style="background:var(--bg-page); padding:16px; border-radius:8px; border:1px solid var(--border-card);">
+              <span style="font-size:0.75rem; color:var(--text-sec); display:block;">Interior Furnishings & Decor</span>
+              <strong style="font-size:1.3rem; color:var(--text-pri);" id="breakdown-furniture">₹0</strong>
+            </div>
+            <div style="background:linear-gradient(135deg, rgba(16,185,129,0.15), rgba(56,189,248,0.1)); padding:16px; border-radius:8px; border:1px solid rgba(16,185,129,0.3);">
+              <span style="font-size:0.75rem; color:var(--success); font-weight:700; display:block;">Grand Total Project Estimate</span>
+              <strong style="font-size:1.4rem; color:var(--text-pri);" id="breakdown-grand-total">₹0</strong>
+            </div>
+          </div>
+
+          <div style="background:var(--bg-page); padding:16px; border-radius:8px; border:1px solid var(--border-card);">
+            <h4 style="margin:0 0 10px 0; font-size:0.9rem;">Architectural Specs Summary:</h4>
+            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; font-size:0.85rem;" id="breakdown-specs-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: Rooms & Placed Furniture -->
+        <div id="tab-rooms" class="modal-tab-content" style="display:none;">
+          <h4 style="margin:0 0 10px 0; font-size:0.95rem;">Room Dimensions & Areas</h4>
+          <div id="modal-rooms-container" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:10px; margin-bottom:20px;"></div>
+
+          <h4 style="margin:0 0 10px 0; font-size:0.95rem;">Placed Furniture & Fixtures Inventory</h4>
+          <div id="modal-furniture-container"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div style="font-size:0.8rem; color:var(--text-sec);">
+          💡 Rates computed from real-world residential construction BoQ indexes.
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button type="button" class="btn btn-sm btn-secondary" id="modal-btn-print">
+            🖨️ Print / Save PDF
+          </button>
+          <button type="button" class="btn btn-sm btn-primary" id="modal-btn-done">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/history.js"></script>
+</body>
+</html>

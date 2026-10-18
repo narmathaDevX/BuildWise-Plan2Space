@@ -1,18 +1,55 @@
-venv/
+# Secrets and environment variables
+.env
+.env.*
+*.env
+!.env.example
+!.env.sample
+!.env.example.*
+!.env.sample.*
+
+# Python virtual environments
 .venv/
-node_modules/
-frontend/node_modules/
-frontend/dist/
+venv/
+env/
+ENV/
+
+# Python cache and test files
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.DS_Store
+*.py[cod]
 .pytest_cache/
 .ruff_cache/
-build/
+.coverage
+htmlcov/
+
+# Node.js dependencies and builds
+node_modules/
+**/node_modules/
 dist/
-*.egg-info/
+**/dist/
+build/
+**/build/
+
+# Local databases
+*.db
 *.sqlite
 *.sqlite3
-*.db
+
+# Generated uploads and model files
+plan2space-3d/data/uploads/*
+!plan2space-3d/data/uploads/.gitkeep
+plan2space-3d/data/models/*
+!plan2space-3d/data/models/.gitkeep
+plan2space-3d/data/jobs/*
+!plan2space-3d/data/jobs/.gitkeep
+
+# OS and editor files
+.DS_Store
+.dist/
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.log

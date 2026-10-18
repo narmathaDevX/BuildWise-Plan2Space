@@ -1,0 +1,124 @@
+{
+  "id": "fp_bw_test",
+  "name": "BW Test",
+  "geometry": {
+    "id": "fp_bw_test",
+    "name": "BuildWise Test House",
+    "walls": [
+      {
+        "id": "w1",
+        "start": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "end": {
+          "x": 10.0,
+          "y": 0.0
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "default"
+      },
+      {
+        "id": "w2",
+        "start": {
+          "x": 10.0,
+          "y": 0.0
+        },
+        "end": {
+          "x": 10.0,
+          "y": 8.0
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "default"
+      },
+      {
+        "id": "w3",
+        "start": {
+          "x": 10.0,
+          "y": 8.0
+        },
+        "end": {
+          "x": 0.0,
+          "y": 8.0
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "default"
+      },
+      {
+        "id": "w4",
+        "start": {
+          "x": 0.0,
+          "y": 8.0
+        },
+        "end": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "thickness": 0.23,
+        "height": 2.8,
+        "is_exterior": true,
+        "source": "default"
+      }
+    ],
+    "openings": [],
+    "rooms": [
+      {
+        "id": "rm_main",
+        "name": "Living Room",
+        "polygon": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 10.0,
+            "y": 0.0
+          },
+          {
+            "x": 10.0,
+            "y": 8.0
+          },
+          {
+            "x": 0.0,
+            "y": 8.0
+          }
+        ],
+        "area_sqm": 80.0,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      }
+    ],
+    "scale": {
+      "pixels_per_metre": 50.0,
+      "source": "default",
+      "reference_length_m": null,
+      "reference_pixels": null,
+      "confidence": 1.0,
+      "warning": null
+    },
+    "roof": {
+      "type": "none",
+      "thickness": 0.15,
+      "pitch_deg": 15.0,
+      "overhang": 0.3
+    },
+    "image_path": null,
+    "image_width_px": null,
+    "image_height_px": null,
+    "bounding_box": null,
+    "metadata": {}
+  },
+  "image_url": null,
+  "warnings": [
+    "Floor plan scale is using default assumption (not measured or user-provided)."
+  ],
+  "created_at": "2026-10-15T18:53:50.825265+00:00",
+  "updated_at": "2026-10-15T18:53:50.825299+00:00"
+}

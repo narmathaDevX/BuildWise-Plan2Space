@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interior Design Studio — Plan2Space 3D</title>
+  <link rel="stylesheet" href="/css/studio.css">
+
+  <!-- ES Module Import Map for local vendored Three.js -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "/vendor/three.module.js",
+      "three/addons/controls/OrbitControls.js": "/vendor/OrbitControls.js",
+      "three/addons/loaders/GLTFLoader.js": "/vendor/GLTFLoader.js",
+      "three/addons/utils/BufferGeometryUtils.js": "/vendor/BufferGeometryUtils.js",
+      "three/addons/exporters/GLTFExporter.js": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/exporters/GLTFExporter.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="studio-app">
+    <!-- Top Studio Header -->
+    <header class="studio-header">
+      <div class="header-left">
+        <button class="btn btn-secondary" id="btn-back-to-model" title="Return to BuildWise Plan">
+          ⬅️ Back to BuildWise
+        </button>
+        <div class="brand">
+          <div class="brand-logo-icon">🏛️</div>
+          <div class="brand-text">
+            <span class="brand-title">BUILDWISE</span>
+            <span class="brand-subtitle">Interior Design Studio</span>
+          </div>
+          <span class="badge" id="conversion-id-badge">Loading...</span>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="history-controls">
+          <button class="btn-icon" id="btn-undo" disabled title="Undo (Cmd+Z)">
+            ↩️ Undo
+          </button>
+          <button class="btn-icon" id="btn-redo" disabled title="Redo (Shift+Cmd+Z)">
+            ↪️ Redo
+          </button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <a href="/history.html" class="btn btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+          📁 Saved Plans & Estimates
+        </a>
+        <button class="btn-icon theme-toggle" id="btn-theme-toggle" title="Toggle Light/Dark Theme">
+          🌙
+        </button>
+        <button class="btn btn-primary" id="btn-save-design">
+          💾 Save Design
+        </button>
+        <button class="btn btn-secondary" id="btn-reset-design" title="Reset all custom paint and furniture">
+          🗑️ Reset
+        </button>
+        <div class="dropdown-export">
+          <button class="btn btn-secondary" id="btn-export-menu">
+            📤 Export ▾
+          </button>
+          <div class="dropdown-menu">
+            <button id="btn-export-glb">💾 Coloured Model (.GLB)</button>
+            <button id="btn-export-png">📸 Snapshot (.PNG)</button>
+            <button id="btn-export-json">📋 Design State (.JSON)</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Studio Workspace: Left Drawer, Center 3D Viewport, Right Properties -->
+    <div class="studio-workspace">
+      <!-- Left Panel: Paint Studio & Furniture Catalogue -->
+      <aside class="studio-sidebar-left">
+        <div class="tab-switcher">
+          <button class="tab-switcher-btn active" data-mode="paint">🎨 Paint</button>
+          <button class="tab-switcher-btn" data-mode="architecture">🧱 Walls & Doors</button>
+          <button class="tab-switcher-btn" data-mode="furniture">🛋️ Furniture</button>
+        </div>
+
+        <!-- TAB 1: Paint Studio -->
+        <div class="studio-panel-tab" id="panel-tab-paint">
+          <div class="panel-section">
+            <h3 class="section-title">Active Color</h3>
+            <div class="active-color-card">
+              <div class="color-preview-box" id="active-color-preview" style="background-color: #F8F7F2;"></div>
+              <div class="color-inputs-group">
+                <input type="color" id="custom-color-picker" value="#F8F7F2">
+                <input type="text" id="custom-hex-input" value="#F8F7F2" maxlength="7" spellcheck="false">
+                <button class="btn-icon" id="btn-eyedropper" title="Eyedropper tool: sample color from wall/floor">
+                  💉 Eyedropper
+                </button>
+              </div>
+            </div>
+
+            <div class="finish-selector">
+              <label class="input-label">Surface Finish:</label>
+              <div class="finish-button-group">
+                <button class="finish-btn active" data-finish="matte">Matte</button>
+                <button class="finish-btn" data-finish="satin">Satin</button>
+                <button class="finish-btn" data-finish="gloss">Gloss</button>
+              </div>
+            </div>
+
+            <div class="finish-selector" style="margin-top: 10px;">
+              <label class="input-label">Click Paint Target:</label>
+              <div class="finish-button-group">
+                <button class="target-btn active" data-target="face" title="Paint the specific face side you click (e.g. inside room vs outside)">Single Face</button>
+                <button class="target-btn" data-target="wall" title="Paint all sides of the wall at once">Whole Wall</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h3 class="section-title">24 Curated Architectural Colors</h3>
+            <div class="swatches-grid" id="preset-colors-grid">
+              <!-- Dynamically populated from /api/v1/design-catalogue -->
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h3 class="section-title">Recent Colors</h3>
+            <div class="recent-swatches" id="recent-colors-row"></div>
+          </div>
+
+          <div class="panel-section">
+            <h3 class="section-title">Room & Batch Painting</h3>
+            <div class="room-paint-controls">
+              <label class="input-label">Select Room:</label>
+              <select id="select-paint-room" class="form-select">
+                <option value="">-- Select Room --</option>
+              </select>
+              <button class="btn btn-secondary w-100 mt-2" id="btn-paint-room">
+                🏠 Paint Whole Room
+              </button>
+              <button class="btn btn-secondary w-100 mt-2" id="btn-paint-all-walls">
+                🧱 Paint All Walls
+              </button>
+            </div>
+          </div>
+
+          <!-- Section: Roof & Ceiling Addition & Styling -->
+          <div class="panel-section">
+            <h3 class="section-title">🏠 Roof Addition & Styling</h3>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label class="input-label" style="margin:0;">Roof Visible:</label>
+                <label class="toggle-pill"><input type="checkbox" id="panel-toggle-roof"> 👁️ Show Roof</label>
+              </div>
+
+              <div class="finish-selector">
+                <label class="input-label">Roof Surface / Texture:</label>
+                <div class="finish-button-group">
+                  <button type="button" class="target-btn active roof-type-btn" data-roof="tiles" title="Spanish clay roof tiles with 3D ridges">Clay Tiles</button>
+                  <button type="button" class="target-btn roof-type-btn" data-roof="plain" title="Modern smooth concrete or metal slab">Plain Smooth</button>
+                </div>
+              </div>
+
+              <div class="finish-selector">
+                <label class="input-label">Roof Geometry:</label>
+                <div class="finish-button-group">
+                  <button type="button" class="target-btn active roof-shape-btn" data-shape="gabled" title="Classic gabled sloped pitch">Gabled / Sloped</button>
+                  <button type="button" class="target-btn roof-shape-btn" data-shape="flat" title="Modern horizontal flat slab">Flat Slab</button>
+                </div>
+              </div>
+
+              <button type="button" class="btn btn-secondary w-100" id="btn-paint-roof">
+                🎨 Paint Roof with Active Color
+              </button>
+
+              <div>
+                <span style="font-size:0.75rem; color:var(--text-soft); display:block; margin-bottom:4px;">Quick Roof Colors:</span>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-sm roof-color-btn" data-color="#C2410C" style="background:#C2410C; color:#fff; padding:3px 8px; font-size:0.7rem; border-radius:4px; border:none; cursor:pointer;">Terracotta</button>
+                  <button type="button" class="btn btn-sm roof-color-btn" data-color="#334155" style="background:#334155; color:#fff; padding:3px 8px; font-size:0.7rem; border-radius:4px; border:none; cursor:pointer;">Slate Grey</button>
+                  <button type="button" class="btn btn-sm roof-color-btn" data-color="#451A03" style="background:#451A03; color:#fff; padding:3px 8px; font-size:0.7rem; border-radius:4px; border:none; cursor:pointer;">Dark Earth</button>
+                  <button type="button" class="btn btn-sm roof-color-btn" data-color="#F8F7F2" style="background:#F8F7F2; color:#171614; padding:3px 8px; font-size:0.7rem; border-radius:4px; border:1px solid #ccc; cursor:pointer;">Modern White</button>
+                  <button type="button" class="btn btn-sm roof-color-btn" data-color="#1E3A8A" style="background:#1E3A8A; color:#fff; padding:3px 8px; font-size:0.7rem; border-radius:4px; border:none; cursor:pointer;">Ocean Blue</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Walls & Doors (Architectural Editing) -->
+        <div class="studio-panel-tab" id="panel-tab-architecture" style="display:none;">
+          <div class="panel-section">
+            <h3 class="section-title">Architectural Tool</h3>
+            <div class="arch-tool-group">
+              <button class="btn btn-secondary arch-tool-btn active" data-tool="inspect" id="btn-tool-inspect">
+                🔍 Inspect & Select
+              </button>
+              <button class="btn btn-danger-outline arch-tool-btn" data-tool="demolish" id="btn-tool-demolish">
+                🔨 Demolish Wall
+              </button>
+            </div>
+            <p class="panel-hint mt-2">
+              <strong>Demolish Mode:</strong> Click any wall in the 3D model to remove / knock it down.
+            </p>
+          </div>
+
+          <div class="panel-section">
+            <h3 class="section-title">Add Doors & Openings</h3>
+            <p class="panel-hint">Select a door or window, then hover over any wall and click to insert.</p>
+            <div class="opening-presets-grid">
+              <button class="opening-preset-card active" data-preset="standard_door">
+                <span class="preset-icon">🚪</span>
+                <span class="preset-title">Standard Door</span>
+                <span class="preset-dims">0.9m × 2.1m</span>
+              </button>
+              <button class="opening-preset-card" data-preset="double_door">
+                <span class="preset-icon">🚪🚪</span>
+                <span class="preset-title">French Door</span>
+                <span class="preset-dims">1.6m × 2.1m</span>
+              </button>
+              <button class="opening-preset-card" data-preset="sliding_door">
+                <span class="preset-icon">🪟</span>
+                <span class="preset-title">Sliding Glass</span>
+                <span class="preset-dims">2.0m × 2.2m</span>
+              </button>
+              <button class="opening-preset-card" data-preset="arch_opening">
+                <span class="preset-icon">🏛️</span>
+                <span class="preset-title">Arched Walkway</span>
+                <span class="preset-dims">1.2m × 2.3m</span>
+              </button>
+              <button class="opening-preset-card" data-preset="standard_window">
+                <span class="preset-icon">🪟</span>
+                <span class="preset-title">2-Pane Window</span>
+                <span class="preset-dims">1.2m × 1.2m</span>
+              </button>
+              <button class="opening-preset-card" data-preset="picture_window">
+                <span class="preset-icon">🖼️</span>
+                <span class="preset-title">Picture Window</span>
+                <span class="preset-dims">2.0m × 1.5m</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h3 class="section-title" style="margin:0;">Walls In House</h3>
+              <button class="btn btn-sm btn-secondary" id="btn-restore-all-walls" title="Restore all demolished walls">
+                ↩️ Restore All
+              </button>
+            </div>
+            <div class="arch-walls-list" id="arch-walls-list-container">
+              <!-- Dynamically populated with wall items and remove/restore buttons -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: Furniture Catalogue -->
+        <div class="studio-panel-tab" id="panel-tab-furniture" style="display:none;">
+          <p class="panel-hint">Select any piece to place it in your 3D home. Move cursor onto floor and click.</p>
+          <div class="categories-accordion" id="furniture-categories-container">
+            <!-- Dynamically populated categories and variants -->
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Viewport Area -->
+      <main class="studio-viewport-area">
+        <!-- Floating Viewport Controls Header -->
+        <div class="floating-viewport-bar">
+          <div class="bar-group">
+            <span class="bar-label">Camera:</span>
+            <button class="btn-sm active" id="btn-cam-persp">Perspective</button>
+            <button class="btn-sm" id="btn-cam-top">Top</button>
+            <button class="btn-sm" id="btn-cam-iso">Isometric</button>
+            <button class="btn-sm" id="btn-cam-walk">🚶 Eye-level (WASD)</button>
+          </div>
+
+          <div class="bar-group">
+            <label class="toggle-pill"><input type="checkbox" id="toggle-room-labels" checked> 🏷️ Room Labels</label>
+            <label class="toggle-pill"><input type="checkbox" id="toggle-roof"> 👁️ Roof</label>
+            <label class="toggle-pill"><input type="checkbox" id="toggle-wall-transparency"> See-through Walls</label>
+            <label class="toggle-pill"><input type="checkbox" id="toggle-grid" checked> Grid</label>
+          </div>
+        </div>
+
+        <!-- Three.js Canvas Container -->
+        <div class="canvas-wrapper" id="studio-canvas-container"></div>
+
+        <!-- Bottom Helpful Hint Overlay -->
+        <div class="studio-status-overlay" id="studio-status-overlay">
+          💡 Click any wall face or floor slab to paint it with the chosen color. Press Esc to deselect.
+        </div>
+      </main>
+
+      <!-- Right Panel: Properties & Inspector -->
+      <aside class="studio-sidebar-right">
+        <h3 class="sidebar-title">Properties & Inspector</h3>
+
+        <!-- Shown when an item is selected -->
+        <div id="furniture-inspector" style="display:none;">
+          <div class="inspector-card">
+            <div class="item-header">
+              <h4 id="insp-title">Furniture Item</h4>
+              <span class="badge" id="insp-variant">Variant</span>
+            </div>
+
+            <!-- Collision Warning Alert -->
+            <div class="alert alert-warning" id="insp-collision-warning" style="display:none;">
+              ⚠️ Item intersects with a wall!
+            </div>
+
+            <div class="prop-group">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <label class="prop-label" style="margin:0;">Position & Movement:</label>
+                <button type="button" class="btn btn-sm" id="insp-btn-reposition" style="background:var(--accent-primary); color:white; font-size:0.75rem; padding:4px 10px; border-radius:4px; border:none; cursor:pointer;" title="Pick up and move this item to a new location with one click">
+                  🎯 Reposition
+                </button>
+              </div>
+
+              <!-- Interactive Numeric X, Y, Z coordinates -->
+              <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+                <div>
+                  <label style="font-size:0.7rem; color:var(--text-soft); display:block;">X (m)</label>
+                  <input type="number" id="insp-input-pos-x" step="0.1" style="width:100%; padding:4px 6px; font-size:0.8rem; background:var(--bg-inset); color:var(--text-main); border:1px solid var(--border-soft); border-radius:4px;">
+                </div>
+                <div>
+                  <label style="font-size:0.7rem; color:var(--text-soft); display:block;">Y (Elev)</label>
+                  <input type="number" id="insp-input-pos-y" step="0.1" style="width:100%; padding:4px 6px; font-size:0.8rem; background:var(--bg-inset); color:var(--text-main); border:1px solid var(--border-soft); border-radius:4px;">
+                </div>
+                <div>
+                  <label style="font-size:0.7rem; color:var(--text-soft); display:block;">Z (m)</label>
+                  <input type="number" id="insp-input-pos-z" step="0.1" style="width:100%; padding:4px 6px; font-size:0.8rem; background:var(--bg-inset); color:var(--text-main); border:1px solid var(--border-soft); border-radius:4px;">
+                </div>
+              </div>
+              <div style="display:none;">
+                <strong id="insp-pos-x">0.0m</strong>
+                <strong id="insp-pos-z">0.0m</strong>
+              </div>
+
+              <!-- Directional Nudge Pad (⬅️, ➡️, ⬆️, ⬇️, 🔼, 🔽) -->
+              <div style="display:flex; flex-direction:column; align-items:center; gap:4px; background:var(--bg-inset); padding:8px; border-radius:6px; border:1px solid var(--border-soft);">
+                <span style="font-size:0.7rem; color:var(--text-soft); margin-bottom:2px;">🎮 Nudge (0.1m) • Shift for 0.5m:</span>
+                <div style="display:flex; gap:4px;">
+                  <button type="button" class="btn btn-sm btn-secondary" id="insp-nudge-fwd" title="Nudge North (-Z)" style="width:36px; padding:4px 0;">⬆️</button>
+                  <button type="button" class="btn btn-sm btn-secondary" id="insp-nudge-up" title="Raise Elevation (+Y)" style="width:36px; padding:4px 0;">🔼</button>
+                </div>
+                <div style="display:flex; gap:4px;">
+                  <button type="button" class="btn btn-sm btn-secondary" id="insp-nudge-left" title="Nudge West (-X)" style="width:36px; padding:4px 0;">⬅️</button>
+                  <button type="button" class="btn btn-sm btn-secondary" id="insp-nudge-back" title="Nudge South (+Z)" style="width:36px; padding:4px 0;">⬇️</button>
+                  <button type="button" class="btn btn-sm btn-secondary" id="insp-nudge-right" title="Nudge East (+X)" style="width:36px; padding:4px 0;">➡️</button>
+                  <button type="button" class="btn btn-sm btn-secondary" id="insp-nudge-down" title="Lower Elevation (-Y)" style="width:36px; padding:4px 0;">🔽</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="prop-group">
+              <label class="prop-label">Rotation:</label>
+              <div class="btn-group-grid">
+                <button class="btn btn-secondary" id="insp-rot-90">🔄 Rotate 90° (R)</button>
+              </div>
+            </div>
+
+            <div class="prop-group">
+              <label class="prop-label">Scale Factors (W × D × H):</label>
+              <div class="scale-inputs-grid">
+                <input type="number" id="insp-scale-w" step="0.1" min="0.2" max="5.0" value="1.0">
+                <input type="number" id="insp-scale-d" step="0.1" min="0.2" max="5.0" value="1.0">
+                <input type="number" id="insp-scale-h" step="0.1" min="0.2" max="5.0" value="1.0">
+              </div>
+            </div>
+
+            <div class="prop-group">
+              <label class="prop-label" id="insp-colors-header">Item Colors / Light Illumination:</label>
+              <div class="color-pair">
+                <div class="pair-item">
+                  <span id="insp-label-primary">Primary:</span>
+                  <input type="color" id="insp-color-primary" value="#EDE6D6">
+                </div>
+                <div class="pair-item">
+                  <span id="insp-label-secondary">Secondary:</span>
+                  <input type="color" id="insp-color-secondary" value="#334155">
+                </div>
+              </div>
+              <div id="insp-light-presets" style="display:none; margin-top: 6px;">
+                <label class="prop-label" style="font-size:0.7rem; color:var(--text-soft);">Quick Light Moods:</label>
+                <div style="display:flex; gap:6px; margin-top:4px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-sm light-preset-btn" data-color="#FEF08A" style="background:#FEF08A; color:#171614; padding:2px 8px; font-size:0.7rem;">Warm</button>
+                  <button type="button" class="btn btn-sm light-preset-btn" data-color="#FFFFFF" style="background:#FFFFFF; color:#171614; padding:2px 8px; font-size:0.7rem;">Daylight</button>
+                  <button type="button" class="btn btn-sm light-preset-btn" data-color="#FDBA74" style="background:#FDBA74; color:#171614; padding:2px 8px; font-size:0.7rem;">Sunset</button>
+                  <button type="button" class="btn btn-sm light-preset-btn" data-color="#93C5FD" style="background:#93C5FD; color:#171614; padding:2px 8px; font-size:0.7rem;">Cool</button>
+                  <button type="button" class="btn btn-sm light-preset-btn" data-color="#C084FC" style="background:#C084FC; color:#171614; padding:2px 8px; font-size:0.7rem;">Mood</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="item-actions">
+              <button class="btn btn-secondary w-100" id="insp-btn-duplicate">
+                📋 Duplicate Item
+              </button>
+              <button class="btn btn-danger-outline w-100 mt-2" id="insp-btn-delete">
+                🗑️ Delete Item (Del)
+              </button>
+            </div>
+          </div>
+
+          <!-- Wall Inspector -->
+          <div id="inspector-wall-view" style="display:none; padding: 16px;">
+            <div class="prop-group">
+              <label class="prop-label">Wall Segment:</label>
+              <h4 id="insp-wall-id" style="color: #38bdf8; font-size: 1rem; margin-top: 4px;">Wall</h4>
+              <span id="insp-wall-dims" class="panel-hint">3.50m (L) × 2.80m (H)</span>
+            </div>
+
+            <div class="item-actions mt-2" style="display: flex; flex-direction: column; gap: 8px;">
+              <button class="btn btn-secondary w-100" id="insp-wall-btn-door">
+                🚪 Add Door to this Wall
+              </button>
+              <button class="btn btn-secondary w-100" id="insp-wall-btn-paint">
+                🎨 Paint with Active Color
+              </button>
+              <button class="btn btn-danger-outline w-100" id="insp-wall-btn-demolish">
+                🔨 Knock Down / Remove Wall
+              </button>
+            </div>
+          </div>
+
+          <!-- Architectural Opening (Door/Window) Inspector -->
+          <div id="inspector-opening-view" style="display:none; padding: 16px;">
+            <div class="prop-group">
+              <label class="prop-label">Architectural Opening:</label>
+              <h4 id="insp-opening-title" style="color: #38bdf8; font-size: 1rem; margin-top: 4px;">Standard Door</h4>
+              <span class="panel-hint">Installed on: <strong id="insp-opening-wall">Wall</strong></span>
+            </div>
+
+            <div class="prop-group mt-2">
+              <label class="prop-label">Dimensions (W × H):</label>
+              <div class="scale-inputs-grid">
+                <input type="number" id="insp-opening-w" step="0.1" min="0.5" max="3.5" value="0.9" readonly>
+                <input type="number" id="insp-opening-h" step="0.1" min="1.0" max="3.0" value="2.1" readonly>
+              </div>
+            </div>
+
+            <div class="item-actions mt-2">
+              <button class="btn btn-secondary w-100 mb-2" id="insp-opening-btn-toggle">
+                🚪 Swing Open / Close Door
+              </button>
+              <button class="btn btn-danger-outline w-100" id="insp-opening-btn-delete">
+                🗑️ Remove Door / Window (Del)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shown when nothing is selected -->
+        <div id="inspector-empty-notice" class="empty-notice">
+          <div class="empty-icon">👆</div>
+          <p>No element selected.</p>
+          <span class="subtext">Click on any wall, door, or furniture in the 3D scene to inspect, customize, or remove.</span>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast" class="toast">Action completed</div>
+
+  <!-- Fatal Error Modal (shown if conversion ID missing or not completed) -->
+  <div class="modal-overlay" id="error-overlay" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-icon">⚠️</div>
+      <h2 id="error-title">Cannot Open Design Studio</h2>
+      <p id="error-message">The requested conversion could not be found or has not finished generating.</p>
+      <div class="modal-actions">
+        <a href="/index.html" class="btn btn-hero">⬅️ Return to 3D Viewer</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Studio Coordinator Entry Script -->
+  <script type="module" src="/js/studio/studioApp.js"></script>
+</body>
+</html>

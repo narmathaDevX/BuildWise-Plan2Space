@@ -1,0 +1,110 @@
+{
+  "name": "Simple Rectangular Plan (Ground Truth)",
+  "scale": {
+    "pixels_per_metre": 50.0,
+    "source": "measured"
+  },
+  "dimensions_m": {
+    "width": 10.0,
+    "depth": 8.0
+  },
+  "walls": [
+    {
+      "id": "w_south",
+      "start": [
+        0.0,
+        0.0
+      ],
+      "end": [
+        10.0,
+        0.0
+      ],
+      "thickness": 0.24,
+      "height": 2.7
+    },
+    {
+      "id": "w_east",
+      "start": [
+        10.0,
+        0.0
+      ],
+      "end": [
+        10.0,
+        8.0
+      ],
+      "thickness": 0.24,
+      "height": 2.7
+    },
+    {
+      "id": "w_north",
+      "start": [
+        10.0,
+        8.0
+      ],
+      "end": [
+        0.0,
+        8.0
+      ],
+      "thickness": 0.24,
+      "height": 2.7
+    },
+    {
+      "id": "w_west",
+      "start": [
+        0.0,
+        8.0
+      ],
+      "end": [
+        0.0,
+        0.0
+      ],
+      "thickness": 0.24,
+      "height": 2.7
+    }
+  ],
+  "openings": [
+    {
+      "id": "door_1",
+      "wall_id": "w_south",
+      "type": "door",
+      "position_along_wall": 4.0,
+      "width": 1.0,
+      "height": 2.1,
+      "sill_height": 0.0
+    },
+    {
+      "id": "win_1",
+      "wall_id": "w_north",
+      "type": "window",
+      "position_along_wall": 3.0,
+      "width": 1.5,
+      "height": 1.2,
+      "sill_height": 0.9
+    }
+  ],
+  "rooms": [
+    {
+      "id": "room_1",
+      "name": "Main Hall",
+      "polygon": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          10.0,
+          0.0
+        ],
+        [
+          10.0,
+          8.0
+        ],
+        [
+          0.0,
+          8.0
+        ]
+      ],
+      "area_sqm": 80.0
+    }
+  ]
+}

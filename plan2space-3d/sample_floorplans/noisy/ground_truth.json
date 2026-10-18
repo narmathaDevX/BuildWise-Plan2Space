@@ -1,0 +1,12 @@
+{
+  "name": "Noisy Skewed Plan (Ground Truth)",
+  "scale": {
+    "pixels_per_metre": 45.0,
+    "source": "measured"
+  },
+  "dimensions_m": {
+    "width": 9.0,
+    "depth": 7.0
+  },
+  "notes": "Includes 1.2 deg skew, gaussian paper noise, and dimension lines."
+}

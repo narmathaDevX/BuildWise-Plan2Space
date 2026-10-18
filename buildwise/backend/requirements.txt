@@ -1,0 +1,15 @@
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+pydantic>=2.7.0
+pydantic-settings>=2.2.0
+sqlalchemy>=2.0.28
+bcrypt>=4.1.2
+pyjwt>=2.8.0
+pytest>=7.4.0
+httpx>=0.25.0
+python-dotenv>=1.0.0
+google-genai>=2.30.0
+shapely>=2.0.0
+trimesh>=4.0.0
+mapbox_earcut>=1.0.0
+scipy>=1.14.0

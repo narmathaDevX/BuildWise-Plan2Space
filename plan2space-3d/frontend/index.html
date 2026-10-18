@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plan2Space 3D — 2D Floor Plan to Interactive 3D House Model</title>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!-- ES Module Import Map for local vendored Three.js -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "/vendor/three.module.js",
+      "three/addons/controls/OrbitControls.js": "/vendor/OrbitControls.js",
+      "three/addons/loaders/GLTFLoader.js": "/vendor/GLTFLoader.js",
+      "three/addons/utils/BufferGeometryUtils.js": "/vendor/BufferGeometryUtils.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="logo-icon">🏠</span>
+        <div class="brand-text">
+          <h1>Plan2Space 3D</h1>
+          <span class="tagline">Deterministic 2D to 3D Floor Plan Conversion</span>
+        </div>
+        <span class="badge version-badge">v1.0.0</span>
+      </div>
+
+      <div class="header-center">
+        <div class="step-breadcrumbs" id="step-breadcrumbs">
+          <span class="crumb active" data-step="1">1. Input</span>
+          <span class="crumb" data-step="2">2. Calibrate</span>
+          <span class="crumb" data-step="3">3. Review</span>
+          <span class="crumb" data-step="4">4. 2D Editor</span>
+          <span class="crumb" data-step="5">5. 3D Model</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <a href="/history.html" class="btn btn-sm btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; margin-right:8px; font-weight:600;">
+          📁 Saved Plans & Estimates
+        </a>
+        <div id="backend-status" class="status-pill connected">
+          <span class="dot"></span>
+          <span class="status-text">FastAPI Engine Ready</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area: Left Control Panel + Right Viewport -->
+    <div class="workspace">
+      <!-- Left Panel: Controls, Steps, Parameters -->
+      <aside class="sidebar">
+        <!-- STEP 1: Input / Upload -->
+        <section class="panel-section" id="section-input">
+          <h2 class="section-title"><span class="step-num">1</span> Plan Input</h2>
+          <p class="section-desc">Upload a floor plan drawing or select a pre-calibrated sample.</p>
+
+          <div class="sample-picker">
+            <label class="input-label">Load Programmatic Sample:</label>
+            <div class="btn-group-grid">
+              <button class="btn btn-secondary" id="btn-sample-rect">Clean Rectangle</button>
+              <button class="btn btn-secondary" id="btn-sample-l">L-Shaped Plan</button>
+              <button class="btn btn-secondary" id="btn-sample-noisy">Noisy Scan</button>
+            </div>
+            <button class="btn btn-action w-100 mt-2" id="btn-import-buildwise">
+              🏛️ Fetch Live Plan from BuildWise (Port 8000)
+            </button>
+          </div>
+
+          <div class="divider"><span>OR UPLOAD IMAGE</span></div>
+
+          <div class="drop-zone" id="drop-zone">
+            <div class="drop-content">
+              <span class="upload-icon">📄</span>
+              <p>Drag & drop floor plan image here</p>
+              <span class="file-hint">PNG, JPG, WebP up to 25MB</span>
+              <label class="btn btn-primary file-btn">
+                Browse Image
+                <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp" style="display:none;">
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 2: Scale Calibration -->
+        <section class="panel-section" id="section-scale">
+          <h2 class="section-title"><span class="step-num">2</span> Scale Calibration</h2>
+          <p class="section-desc">Images require real-world scaling. Click two points on a known line or enter overall width.</p>
+
+          <div class="calibration-tools">
+            <div class="scale-info-card" id="scale-info-card">
+              <div class="scale-stat">
+                <span class="label">Current Ratio:</span>
+                <span class="val" id="scale-display">50.0 px/m</span>
+              </div>
+              <div class="scale-stat">
+                <span class="label">Provenance:</span>
+                <span class="val badge" id="scale-provenance">default</span>
+              </div>
+            </div>
+
+            <div class="tab-controls">
+              <button class="tab-btn active" data-tab="tab-line">Two-Point Line</button>
+              <button class="tab-btn" data-tab="tab-dims">Known Dimensions</button>
+            </div>
+
+            <div class="tab-content active" id="tab-line">
+              <button class="btn btn-action w-100" id="btn-start-line-cal">
+                📏 Measure Line on 2D Plan
+              </button>
+              <div id="line-cal-inputs" class="cal-subinputs" style="display:none;">
+                <label>Known Distance (metres):</label>
+                <div class="input-with-addon">
+                  <input type="number" id="cal-line-m" value="5.0" step="0.1" min="0.5">
+                  <span class="addon">m</span>
+                </div>
+                <button class="btn btn-success w-100 mt-2" id="btn-apply-line-cal">Apply Calibration</button>
+              </div>
+            </div>
+
+            <div class="tab-content" id="tab-dims" style="display:none;">
+              <div class="form-group">
+                <label>Overall Plan Width (X):</label>
+                <div class="input-with-addon">
+                  <input type="number" id="cal-dim-width" placeholder="e.g. 10.0" step="0.5">
+                  <span class="addon">m</span>
+                </div>
+              </div>
+              <button class="btn btn-success w-100 mt-2" id="btn-apply-dim-cal">Set Width & Re-scale</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 3: Detection Review & Warnings -->
+        <section class="panel-section" id="section-review">
+          <h2 class="section-title"><span class="step-num">3</span> Detection Review</h2>
+          <div class="detection-stats-grid">
+            <div class="stat-box">
+              <span class="num" id="stat-walls">0</span>
+              <span class="lbl">Walls</span>
+            </div>
+            <div class="stat-box">
+              <span class="num" id="stat-openings">0</span>
+              <span class="lbl">Openings</span>
+            </div>
+            <div class="stat-box">
+              <span class="num" id="stat-rooms">0</span>
+              <span class="lbl">Rooms</span>
+            </div>
+            <div class="stat-box">
+              <span class="num" id="stat-confidence">--</span>
+              <span class="lbl">Confidence</span>
+            </div>
+          </div>
+
+          <div id="warnings-container" class="warnings-box" style="display:none;">
+            <h4>Detection Notes & Warnings:</h4>
+            <ul id="warnings-list"></ul>
+          </div>
+        </section>
+
+        <!-- STEP 4: 3D Build Parameters -->
+        <section class="panel-section" id="section-params">
+          <h2 class="section-title"><span class="step-num">4</span> 3D Parameters</h2>
+          <div class="params-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Wall Height:</label>
+                <div class="input-with-addon">
+                  <input type="number" id="param-wall-height" value="2.7" step="0.1" min="1.8" max="6.0">
+                  <span class="addon">m</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Ext. Wall Thickness:</label>
+                <div class="input-with-addon">
+                  <input type="number" id="param-ext-thick" value="0.23" step="0.01" min="0.10">
+                  <span class="addon">m</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Floor Slab:</label>
+                <select id="param-include-floor">
+                  <option value="true" selected>Include Slab (0.15m)</option>
+                  <option value="false">No Floor</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Roof Style:</label>
+                <select id="param-roof-type">
+                  <option value="none" selected>None (Open Top)</option>
+                  <option value="flat">Flat Roof Slab</option>
+                  <option value="gabled">Gabled Pitch (20°)</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn btn-hero w-100" id="btn-generate-3d">
+              🚀 Generate Interactive 3D Model
+            </button>
+          </div>
+        </section>
+
+        <!-- STEP 5: Conversion Progress & Stats -->
+        <section class="panel-section" id="section-progress" style="display:none;">
+          <h2 class="section-title"><span class="step-num">5</span> Generating 3D Mesh</h2>
+          <div class="progress-wrapper">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="job-progress-fill" style="width: 0%;"></div>
+            </div>
+            <div class="progress-labels">
+              <span id="job-step-label">Initializing...</span>
+              <span id="job-pct-label">0%</span>
+            </div>
+          </div>
+          <div id="job-error" class="alert alert-danger" style="display:none;"></div>
+        </section>
+
+        <!-- STEP 6: Export Center -->
+        <section class="panel-section" id="section-export">
+          <h2 class="section-title"><span class="step-num">6</span> Export & Download</h2>
+          <div class="btn-group-column">
+            <button class="btn btn-hero btn-open-studio" id="btn-open-studio-export" disabled style="background: linear-gradient(135deg, #8b5cf6, #ec4899); margin-bottom: 0.5rem;">
+              🎨 Open Design Studio
+            </button>
+            <button class="btn btn-export" id="btn-download-glb" disabled>
+              💾 Download 3D Model (.GLB)
+            </button>
+            <button class="btn btn-export" id="btn-download-obj" disabled>
+              📐 Download Wavefront (.OBJ)
+            </button>
+            <button class="btn btn-export" id="btn-download-json" disabled>
+              📋 Download 2D Geometry (.JSON)
+            </button>
+            <button class="btn btn-export" id="btn-screenshot-png">
+              📸 Snapshot Viewport (.PNG)
+            </button>
+            <a href="/history.html" class="btn btn-export" style="text-decoration:none; text-align:center; background:rgba(16,185,129,0.12); color:#10b981; border:1px solid rgba(16,185,129,0.3); font-weight:600;">
+              📊 View Materials & Cost Estimate
+            </a>
+          </div>
+        </section>
+      </aside>
+
+      <!-- Right Main Viewport Area (Split 2D SVG Editor & 3D WebGL Viewer) -->
+      <main class="viewport-area">
+        <!-- View Mode Switcher -->
+        <div class="view-mode-bar">
+          <div class="mode-buttons">
+            <button class="mode-btn active" id="btn-view-2d">📐 2D Geometry Editor</button>
+            <button class="mode-btn" id="btn-view-3d">🌐 3D Interactive Viewer</button>
+            <button class="mode-btn" id="btn-view-split">🔀 Split View</button>
+          </div>
+
+          <div class="viewport-controls" id="viewer-controls" style="display:none;">
+            <button class="btn-sm btn-open-studio" id="btn-open-studio-viewer" disabled style="background: linear-gradient(135deg, #8b5cf6, #ec4899); color: white; font-weight: 600; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer;">
+              🛋️ Design Studio
+            </button>
+            <div class="pill-group">
+              <label class="toggle-pill"><input type="checkbox" id="toggle-layer-walls" checked> Walls</label>
+              <label class="toggle-pill"><input type="checkbox" id="toggle-layer-floor" checked> Floor</label>
+              <label class="toggle-pill"><input type="checkbox" id="toggle-layer-roof" checked> Roof</label>
+              <label class="toggle-pill"><input type="checkbox" id="toggle-wireframe"> Wireframe</label>
+            </div>
+            <div class="cam-presets">
+              <button class="btn-sm" id="btn-cam-persp">Perspective</button>
+              <button class="btn-sm" id="btn-cam-top">Top</button>
+              <button class="btn-sm" id="btn-cam-front">Front</button>
+              <button class="btn-sm" id="btn-cam-walk">🚶 POV Walkthrough</button>
+              <button class="btn-sm" id="btn-cam-reset">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Viewport Canvas Container -->
+        <div class="viewport-container" id="viewport-container">
+          <!-- 2D SVG Correction Editor Layer -->
+          <div class="canvas-panel" id="panel-2d">
+            <div class="editor-toolbar">
+              <button class="tool-btn active" id="tool-select" title="Select & Drag Endpoints">👆 Move / Edit</button>
+              <button class="tool-btn" id="tool-add-wall" title="Click two points to draw a wall">➕ Add Wall</button>
+              <button class="tool-btn" id="tool-add-door" title="Click on a wall to place a door">🚪 Add Door</button>
+              <button class="tool-btn" id="tool-add-window" title="Click on a wall to place a window">🪟 Add Window</button>
+              <button class="tool-btn text-danger" id="tool-delete-selected" title="Delete selected wall">🗑️ Delete</button>
+              <button class="tool-btn" id="tool-save-geom" title="Save geometry changes to server">💾 Save 2D Plan</button>
+            </div>
+
+            <div class="svg-stage-wrapper" id="svg-stage-wrapper">
+              <svg id="svg-editor-canvas" class="svg-canvas"></svg>
+            </div>
+            <div class="editor-hint" id="editor-hint">
+              💡 Drag wall endpoints to reposition. Click a wall to select it.
+            </div>
+          </div>
+
+          <!-- 3D Three.js WebGL Viewer Layer -->
+          <div class="canvas-panel" id="panel-3d" style="display:none;">
+            <div id="three-canvas-container" class="three-container"></div>
+            <div class="viewer-overlay-badge" id="model-stats-badge" style="display:none;">
+              <span id="badge-verts">0 vertices</span> • <span id="badge-faces">0 faces</span>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Main JavaScript Application Modules -->
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

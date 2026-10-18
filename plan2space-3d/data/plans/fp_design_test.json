@@ -1,0 +1,143 @@
+{
+  "id": "fp_design_test",
+  "name": "Design Studio Test House",
+  "geometry": {
+    "id": "plan_test_rect",
+    "name": "10x8 Rectangle Test",
+    "walls": [
+      {
+        "id": "w_south",
+        "start": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "end": {
+          "x": 10.0,
+          "y": 0.0
+        },
+        "thickness": 0.23,
+        "height": 2.7,
+        "is_exterior": true,
+        "source": "default"
+      },
+      {
+        "id": "w_east",
+        "start": {
+          "x": 10.0,
+          "y": 0.0
+        },
+        "end": {
+          "x": 10.0,
+          "y": 8.0
+        },
+        "thickness": 0.23,
+        "height": 2.7,
+        "is_exterior": true,
+        "source": "default"
+      },
+      {
+        "id": "w_north",
+        "start": {
+          "x": 10.0,
+          "y": 8.0
+        },
+        "end": {
+          "x": 0.0,
+          "y": 8.0
+        },
+        "thickness": 0.23,
+        "height": 2.7,
+        "is_exterior": true,
+        "source": "default"
+      },
+      {
+        "id": "w_west",
+        "start": {
+          "x": 0.0,
+          "y": 8.0
+        },
+        "end": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "thickness": 0.23,
+        "height": 2.7,
+        "is_exterior": true,
+        "source": "default"
+      }
+    ],
+    "openings": [
+      {
+        "id": "door_main",
+        "wall_id": "w_south",
+        "type": "door",
+        "position_along_wall": 4.0,
+        "width": 1.0,
+        "height": 2.1,
+        "sill_height": 0.0,
+        "source": "default"
+      },
+      {
+        "id": "win_living",
+        "wall_id": "w_north",
+        "type": "window",
+        "position_along_wall": 3.0,
+        "width": 1.5,
+        "height": 1.2,
+        "sill_height": 0.9,
+        "source": "default"
+      }
+    ],
+    "rooms": [
+      {
+        "id": "rm_main",
+        "name": "Living Room",
+        "polygon": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 10.0,
+            "y": 0.0
+          },
+          {
+            "x": 10.0,
+            "y": 8.0
+          },
+          {
+            "x": 0.0,
+            "y": 8.0
+          }
+        ],
+        "area_sqm": 80.0,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "default"
+      }
+    ],
+    "scale": {
+      "pixels_per_metre": 50.0,
+      "source": "default",
+      "reference_length_m": null,
+      "reference_pixels": null,
+      "confidence": 1.0,
+      "warning": null
+    },
+    "roof": {
+      "type": "none",
+      "thickness": 0.15,
+      "pitch_deg": 15.0,
+      "overhang": 0.3
+    },
+    "image_path": null,
+    "image_width_px": null,
+    "image_height_px": null,
+    "bounding_box": null,
+    "metadata": {}
+  },
+  "image_url": null,
+  "warnings": [],
+  "created_at": "2026-10-15T18:32:46.479709+00:00",
+  "updated_at": "2026-10-18T13:22:42.446491+00:00"
+}

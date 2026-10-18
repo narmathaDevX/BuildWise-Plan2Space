@@ -1,0 +1,184 @@
+{
+  "id": "fp_a76c7c1a",
+  "name": "Roundtrip Test Plan",
+  "geometry": {
+    "id": "fp_a76c7c1a",
+    "name": "Roundtrip Test Plan",
+    "walls": [
+      {
+        "id": "w_01",
+        "start": {
+          "x": 1.9,
+          "y": 2.0462
+        },
+        "end": {
+          "x": 6.12,
+          "y": 2.0462
+        },
+        "thickness": 0.15,
+        "height": 2.7,
+        "is_exterior": true,
+        "source": "estimated"
+      },
+      {
+        "id": "w_02",
+        "start": {
+          "x": 6.42,
+          "y": 10.0652
+        },
+        "end": {
+          "x": 12.14,
+          "y": 10.0652
+        },
+        "thickness": 0.15,
+        "height": 2.7,
+        "is_exterior": true,
+        "source": "estimated"
+      },
+      {
+        "id": "w_03",
+        "start": {
+          "x": 11.9918,
+          "y": 10.1
+        },
+        "end": {
+          "x": 11.9918,
+          "y": 1.86
+        },
+        "thickness": 0.15,
+        "height": 2.7,
+        "is_exterior": true,
+        "source": "estimated"
+      },
+      {
+        "id": "w_04",
+        "start": {
+          "x": 6.94,
+          "y": 1.9186
+        },
+        "end": {
+          "x": 12.08,
+          "y": 1.9186
+        },
+        "thickness": 0.15,
+        "height": 2.7,
+        "is_exterior": true,
+        "source": "estimated"
+      },
+      {
+        "id": "w_05",
+        "start": {
+          "x": 2.0234,
+          "y": 10.1
+        },
+        "end": {
+          "x": 2.0234,
+          "y": 1.88
+        },
+        "thickness": 0.15,
+        "height": 2.7,
+        "is_exterior": true,
+        "source": "estimated"
+      },
+      {
+        "id": "w_06",
+        "start": {
+          "x": 1.9,
+          "y": 9.9439
+        },
+        "end": {
+          "x": 5.12,
+          "y": 9.9439
+        },
+        "thickness": 0.15,
+        "height": 2.7,
+        "is_exterior": true,
+        "source": "estimated"
+      },
+      {
+        "id": "w_partition_test",
+        "start": {
+          "x": 5.0,
+          "y": 0.0
+        },
+        "end": {
+          "x": 5.0,
+          "y": 8.0
+        },
+        "thickness": 0.15,
+        "height": 2.7,
+        "is_exterior": false,
+        "source": "user_provided"
+      }
+    ],
+    "openings": [],
+    "rooms": [
+      {
+        "id": "rm_01",
+        "name": "Living / Hall 1",
+        "polygon": [
+          {
+            "x": 2.18,
+            "y": 9.82
+          },
+          {
+            "x": 2.18,
+            "y": 2.1
+          },
+          {
+            "x": 11.9,
+            "y": 2.1
+          },
+          {
+            "x": 11.9,
+            "y": 9.82
+          }
+        ],
+        "area_sqm": 75.04,
+        "floor_thickness": 0.15,
+        "color_hex": null,
+        "source": "estimated"
+      }
+    ],
+    "scale": {
+      "pixels_per_metre": 50.0,
+      "source": "user_provided",
+      "reference_length_m": null,
+      "reference_pixels": null,
+      "confidence": 1.0,
+      "warning": null
+    },
+    "roof": {
+      "type": "none",
+      "thickness": 0.15,
+      "pitch_deg": 15.0,
+      "overhang": 0.3
+    },
+    "image_path": "data/uploads/fp_a76c7c1a/plan.png",
+    "image_width_px": 700,
+    "image_height_px": 600,
+    "bounding_box": {
+      "min_x": 1.9,
+      "min_y": 0.0,
+      "max_x": 12.14,
+      "max_y": 10.1,
+      "width_m": 10.24,
+      "depth_m": 10.1
+    },
+    "metadata": {
+      "image_width_px": 700,
+      "image_height_px": 600,
+      "quality_score": 0.82,
+      "confidence_score": 0.86,
+      "needs_review": false,
+      "wall_count": 6,
+      "opening_count": 0,
+      "room_count": 1,
+      "detected_wall_thickness_m": 0.15
+    }
+  },
+  "image_url": "/api/v1/floor-plans/fp_a76c7c1a/image",
+  "warnings": [],
+  "created_at": "2026-10-15T18:41:05.941236+00:00",
+  "updated_at": "2026-10-15T18:41:06.057718+00:00"
+}

@@ -1,0 +1,23 @@
+{
+  "name": "L-Shaped Multi-Room Plan (Ground Truth)",
+  "scale": {
+    "pixels_per_metre": 50.0,
+    "source": "measured"
+  },
+  "dimensions_m": {
+    "width": 12.0,
+    "depth": 10.0
+  },
+  "rooms": [
+    {
+      "id": "rm_living",
+      "name": "Living & Dining",
+      "area_sqm": 70.0
+    },
+    {
+      "id": "rm_bedroom",
+      "name": "Master Bedroom",
+      "area_sqm": 25.0
+    }
+  ]
+}
