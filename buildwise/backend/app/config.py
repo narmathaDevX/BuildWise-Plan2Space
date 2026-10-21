@@ -18,7 +18,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
     ]
     # Google Gemini AI Plan Advisor configuration
-    GEMINI_API_KEY=os.getenv("GEMINI_API_KEY", "")
+    GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-3.1-flash-lite"
     RATE_LIMIT_PER_MINUTE: int = 20
 
