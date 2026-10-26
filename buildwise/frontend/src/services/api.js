@@ -1,5 +1,7 @@
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+const rawApiUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+export const API_BASE_URL = rawApiUrl.startsWith("http://") || rawApiUrl.startsWith("https://")
+  ? rawApiUrl
+  : `https://${rawApiUrl}`;
 
 export async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
