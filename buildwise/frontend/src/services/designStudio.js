@@ -2,10 +2,14 @@
  * Service to bridge BuildWise 2D architectural plans with Plan2Space 3D Design Studio.
  */
 
-const rawStudioUrl = import.meta.env.VITE_DESIGN_STUDIO_URL || "http://localhost:8001";
-export const DESIGN_STUDIO_BASE_URL = rawStudioUrl.startsWith("http://") || rawStudioUrl.startsWith("https://")
-  ? rawStudioUrl
-  : `https://${rawStudioUrl}`;
+let rawStudioUrl = import.meta.env.VITE_DESIGN_STUDIO_URL || "http://localhost:8001";
+if (rawStudioUrl && !rawStudioUrl.includes(".") && !rawStudioUrl.includes("localhost")) {
+  rawStudioUrl = `${rawStudioUrl}.onrender.com`;
+}
+if (!rawStudioUrl.startsWith("http://") && !rawStudioUrl.startsWith("https://")) {
+  rawStudioUrl = `https://${rawStudioUrl}`;
+}
+export const DESIGN_STUDIO_BASE_URL = rawStudioUrl;
 
 const FT_TO_M = 0.3048;
 

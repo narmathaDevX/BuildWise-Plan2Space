@@ -1,7 +1,11 @@
-const rawApiUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
-export const API_BASE_URL = rawApiUrl.startsWith("http://") || rawApiUrl.startsWith("https://")
-  ? rawApiUrl
-  : `https://${rawApiUrl}`;
+let rawApiUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+if (rawApiUrl && !rawApiUrl.includes(".") && !rawApiUrl.includes("localhost")) {
+  rawApiUrl = `${rawApiUrl}.onrender.com`;
+}
+if (!rawApiUrl.startsWith("http://") && !rawApiUrl.startsWith("https://")) {
+  rawApiUrl = `https://${rawApiUrl}`;
+}
+export const API_BASE_URL = rawApiUrl;
 
 export async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
